@@ -10,7 +10,16 @@
     <title>张勤康-个人作品集网站</title>
     <script type="module" crossorigin src="/assets/index-BtTUqiWb.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-D-bYn1Q5.css">
-  </head>
+  <script>
+addEventListener('DOMContentLoaded', () => {
+  const warm=()=>["/reference-sites/motionsites/loop-video/8d8791b3d761742d5c-400.mp4", "/reference-sites/motionsites/loop-video/476e98763a4a990f9f-400.mp4", "/reference-sites/motionsites/loop-video/42acda8c9c9660515e-400.mp4"].reduce((pending, path)=>pending.then(
+    ()=>fetch(path,{cache:'force-cache',priority:'low'}).then(
+      response=>response.ok?response.arrayBuffer():null).catch(()=>null)
+  ),Promise.resolve());
+  if(window.requestIdleCallback)requestIdleCallback(warm,{timeout:1600});
+  else setTimeout(warm,500);
+},{once:true});
+</script></head>
   <body>
     <div id="root"></div>
   </body>
