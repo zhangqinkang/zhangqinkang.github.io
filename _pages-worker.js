@@ -1,6 +1,6 @@
 importScripts('/_pages-config.js');
 
-const { routes, css, external, origin } = self.releaseConfig;
+const { routes, css, external, origin, tqxAliases, documentAliases } = self.releaseConfig;
 const externalAssets = new Set(external);
 const projectRoutes = new Map([
   ['/', 'home'],
@@ -52,8 +52,20 @@ async function serve(request) {
       return sameOriginAsset(css[path][narrow ? '390' : '1920'], request);
     }
   }
-  if (externalAssets.has(url.pathname) ||
-      /^\/(hk(?:\/|$)|en(?:\/|$)|docs(?:\/|$)|agent_quant(?:\/|$)|tqx(?:-|\.|Api))/.test(path)) {
+  if (Object.hasOwn(tqxAliases, path)) {
+    return sameOriginAsset(tqxAliases[path], request, true);
+  }
+  if (Object.hasOwn(documentAliases, path)) {
+    return sameOriginAsset(documentAliases[path], request);
+  }
+  if (path.startsWith('/tqx-mobile/')) {
+    const local = await fetch(request);
+    if (local.status !== 404) return local;
+  }
+  if (/^\/(hk(?:\/|$)|en(?:\/|$)|docs(?:\/|$)|mintlify-assets\/|_i18n\/|agent_quant(?:\/|$)|tqx(?:-|\.|Api))/.test(path)) {
+    return originalAsset(url, request, 'https://design-ui-tqx.pages.dev');
+  }
+  if (externalAssets.has(url.pathname)) {
     return originalAsset(url, request);
   }
   const result = await fetch(request);
@@ -61,15 +73,18 @@ async function serve(request) {
   return result;
 }
 
-async function sameOriginAsset(path, request) {
-  return copyResponse(await fetch(new URL(path, self.location.origin), { method: request.method }));
+async function sameOriginAsset(path, request, preserveRange = false) {
+  const headers = new Headers();
+  const range = request.headers.get('Range');
+  if (preserveRange && range) headers.set('Range', range);
+  return copyResponse(await fetch(new URL(path, self.location.origin), { method: request.method, headers }));
 }
 
-async function originalAsset(url, request) {
+async function originalAsset(url, request, assetOrigin = origin) {
   const headers = new Headers();
   const range = request.headers.get('Range');
   if (range) headers.set('Range', range);
-  const upstream = new URL(origin);
+  const upstream = new URL(assetOrigin);
   upstream.pathname = url.pathname;
   upstream.search = url.search;
   const response = await fetch(upstream, { method: request.method, headers, credentials: 'omit' });
