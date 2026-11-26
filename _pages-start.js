@@ -4,15 +4,14 @@
   const selected = entries[mobile && entries.length === 2 ? 1 : 0];
   for (const url of selected?.preload || []) {
     const filename = new URL(url, location.href).pathname;
-    if (!/\.(css|js)$/.test(filename)) continue;
     const link = document.createElement('link');
     link.href = url;
-    link.crossOrigin = 'anonymous';
     if (filename.endsWith('.js')) {
+      link.crossOrigin = 'anonymous';
       link.rel = 'modulepreload';
     } else {
       link.rel = 'preload';
-      link.as = 'style';
+      link.as = filename.endsWith('.css') ? 'style' : 'image';
     }
     document.head.appendChild(link);
   }
