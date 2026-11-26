@@ -5,7 +5,17 @@
  const duplicate=[...document.querySelectorAll('video')].find(v=>v.getAttribute('aria-label')==='Finlytic AI Agent');
  if(rivr){const a=variants['assets/hero-finlytic-preview-CV9g0FHP.gif'];rivr.dataset.loop='assets/hero-finlytic-preview-CV9g0FHP.gif';rivr.src=a.video;rivr.poster=a.poster;rivr.setAttribute('aria-label','Finlytic AI Agent');const card=rivr.closest('.prompt-card-hover');if(card?.querySelector('h3'))card.querySelector('h3').textContent='Finlytic AI Agent';if(duplicate&&duplicate!==rivr)duplicate.closest('.prompt-card-hover')?.remove()}
  const videos=[...document.querySelectorAll('video[data-loop]')];
- const selectSource=v=>{const a=variants[v.dataset.loop],r=v.getBoundingClientRect(),scale=window.frameElement?frameElement.getBoundingClientRect().width/innerWidth:1;const pixels=Math.max(r.width,r.height*a.width/a.height)*scale*(devicePixelRatio||1);const src=pixels<=a.smallWidth?a.smallVideo:a.video;if(v.getAttribute('src')!==src)v.src=src};
+ const displayScale=()=>{
+   let scale=1, view=window;
+   while(view!==view.top){
+     const frame=view.frameElement;
+     if(!frame||!frame.offsetWidth)break;
+     scale*=frame.getBoundingClientRect().width/frame.offsetWidth;
+     view=view.parent;
+   }
+   return scale;
+ };
+ const selectSource=v=>{const a=variants[v.dataset.loop],r=v.getBoundingClientRect(),scale=displayScale();const pixels=Math.max(r.width,r.height*a.width/a.height)*scale*(devicePixelRatio||1);const src=pixels<=a.smallWidth?a.smallVideo:a.video;if(v.getAttribute('src')!==src)v.src=src};
  videos.forEach(selectSource);addEventListener('resize',()=>videos.forEach(selectSource));
  let travel=900,last=performance.now(),ready=false;
  const outerVisible=()=>{const frame=window.frameElement;if(!frame)return true;const r=frame.getBoundingClientRect();return r.bottom>0&&r.top<parent.innerHeight};
