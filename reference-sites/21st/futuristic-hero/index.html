@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="/reference-sites/proof-preview-bootstrap.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Futuristic Hero · Original Demo</title>
+  <style>
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif}
+    #hero{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
+    #hero canvas{position:absolute;inset:-9%;width:118%;height:118%;opacity:0;transition:opacity .25s}
+    .copy{position:absolute;z-index:2;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-transform:uppercase;pointer-events:none;padding:40px;text-align:center;transform:scale(1.18)}
+    .title{display:flex;gap:24px;overflow:hidden;font-size:clamp(32px,5vw,72px);font-weight:800}
+    .title span,.subtitle,.explore{opacity:0;animation:fade-in .52s ease forwards}
+    .title span:nth-child(1){animation-delay:.6s}.title span:nth-child(2){animation-delay:1.2s}.title span:nth-child(3){animation-delay:1.8s}
+    .subtitle{margin-top:12px;font-size:clamp(13px,2vw,30px);font-weight:700;animation-delay:2.6s}
+    @keyframes fade-in{from{opacity:0;transform:translateY(24px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+  </style>
+</head>
+<body>
+  <div id="hero">
+    <canvas aria-hidden="true"></canvas>
+    <div class="copy"><div class="title"><span>Build</span><span>Your</span><span>Dreams</span></div><div class="subtitle">AI-powered creativity for the next generation.</div></div>
+  </div>
+  <script type="module">
+
+    if (parent.matchMedia('(max-width:820px)').matches) {
+      const style=document.createElement('style'); style.textContent='.title span,.subtitle,.explore{animation-delay:-4s!important}';document.head.append(style);
+    }
+    const root = document.querySelector('#hero')
+    const canvas = root.querySelector('canvas')
+    canvas.addEventListener('panda-scan-ready', () => parent.postMessage({ type: 'portfolio-source-proof-ready' }, location.origin), { once: true })
+    const phone = Boolean(window.frameElement?.closest('.panda-proof-live-preview')) && parent.matchMedia('(max-width:820px)').matches
+    const mount = phone
+      ? (await import('/panda-original/scan-frame-player.js')).mountScanFrames(canvas, root, 'source')
+      : (await import('/panda-original/scanning-hero.js')).mountScanningHero(
+      canvas,
+      root,
+      '/reference-sites/21st/futuristic-hero/img-4.png?v=original-crc',
+      '/reference-sites/21st/futuristic-hero/raw-4.webp?v=original-crc',
+      { original21st: true, hideFullScanLine: true },
+    )
+    mount.catch(error => {
+      console.error('Original Futuristic Hero failed to mount', error)
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interaction reference</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #000; }
+      video { display: block; width: 100vw; height: 100vh; object-fit: contain; }
+    </style>
+  </head>
+  <body>
+    <video id="reference" controls muted playsinline preload="auto" src="/reference-experience.mp4"></video>
+    <div style="position:fixed;right:12px;bottom:12px;z-index:10;display:flex;gap:6px">
+      <button onclick="seekTo(0)">0.0</button>
+      <button onclick="seekTo(.7)">0.7</button>
+      <button onclick="seekTo(1.4)">1.4</button>
+      <button onclick="seekTo(2.1)">2.1</button>
+      <button onclick="seekTo(2.8)">2.8</button>
+      <button onclick="seekTo(3.5)">3.5</button>
+      <button onclick="seekTo(4)">4.0</button>
+    </div>
+    <script>
+      const video = document.getElementById('reference')
+      function seekTo(time) {
+        video.pause()
+        video.currentTime = time
+      }
+    </script>
+  </body>
+</html>

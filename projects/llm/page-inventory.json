@@ -1,0 +1,158 @@
+{
+  "source": "https://design-ui-pandaai.pages.dev/competition/llm/",
+  "capturedAt": "2026-09-27T18:12:47.202Z",
+  "views": [
+    {
+      "id": "live",
+      "title": "实时赛场 · 交易记录",
+      "query": "page=0",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": [
+          {
+            "class": "trading-list",
+            "height": 682,
+            "total": 2415
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdings",
+      "title": "实时赛场 · 当前持仓",
+      "query": "page=0",
+      "panel": 1,
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": [
+          {
+            "class": "trading-holding-container-body",
+            "height": 682,
+            "total": 834
+          }
+        ]
+      }
+    },
+    {
+      "id": "chat",
+      "title": "实时赛场 · 模型对话",
+      "query": "page=0",
+      "panel": 2,
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": [
+          {
+            "class": "model-chat-container-body",
+            "height": 682,
+            "total": 1332
+          }
+        ]
+      }
+    },
+    {
+      "id": "prediction",
+      "title": "实时赛场 · 冠军预测",
+      "query": "page=0",
+      "panel": 3,
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": []
+      }
+    },
+    {
+      "id": "ranking",
+      "title": "排行榜入口",
+      "query": "page=1",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": []
+      }
+    },
+    {
+      "id": "tournament",
+      "title": "锦标赛",
+      "query": "page=1&view=tournament",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": [
+          {
+            "class": "llm-wrapper",
+            "height": 1000,
+            "total": 1564
+          }
+        ]
+      },
+      "fullHeight": 1444
+    },
+    {
+      "id": "ladder",
+      "title": "天梯赛",
+      "query": "page=1&view=ladder",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": [
+          {
+            "class": "llm-wrapper",
+            "height": 1000,
+            "total": 1301
+          }
+        ]
+      },
+      "fullHeight": 1301
+    },
+    {
+      "id": "analysis",
+      "title": "分析",
+      "query": "page=1&view=analysis",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": [
+          {
+            "class": "llm-wrapper",
+            "height": 1000,
+            "total": 1247
+          }
+        ]
+      },
+      "fullHeight": 1247
+    },
+    {
+      "id": "model",
+      "title": "模型详情",
+      "query": "page=2",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000,
+        "scrollables": [
+          {
+            "class": "llm-wrapper",
+            "height": 1000,
+            "total": 2138
+          }
+        ]
+      },
+      "fullHeight": 2138
+    },
+    {
+      "id": "rules",
+      "title": "规则介绍",
+      "query": "",
+      "route": "/competition/llm/rules/",
+      "dimensions": {
+        "width": 1440,
+        "height": 5135,
+        "scrollables": []
+      }
+    }
+  ],
+  "assetCount": 70,
+  "failed": []
+}

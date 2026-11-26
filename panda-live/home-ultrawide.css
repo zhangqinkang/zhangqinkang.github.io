@@ -1,0 +1,25 @@
+/* Keep the activity banners at their desktop design size on ultrawide and
+   4K displays. Extra screen width becomes whitespace instead of scaling. */
+@media (min-width: 1600px) {
+  .banner-section .duo-container {
+    width: 1600px !important;
+    max-width: 100%;
+    margin-inline: auto;
+    padding-inline: 120px !important;
+  }
+
+  .banner-section .duo-track {
+    width: 100%;
+    height: 360px !important;
+    max-height: none;
+    aspect-ratio: auto;
+    gap: 20px !important;
+  }
+
+  .banner-section .duo-cta {
+    width: auto;
+    height: 40px;
+    padding-inline: 18px;
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="7px" viewBox="0 0 12 7" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>像素箭头备份</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="排行榜3" transform="translate(-793, -424)" fill="#121213" fill-rule="nonzero">
+            <g id="像素箭头备份" transform="translate(799, 427.5) rotate(-270) translate(-799, -427.5)translate(796, 422)">
+                <polygon id="路径" points="0 0 1.5 0 1.5 1.55692969 0 1.55692969"></polygon>
+                <polygon id="路径" points="1.5 1.55691895 3 1.55691895 3 3.13076758 1.5 3.13076758 1.5 1.55691895"></polygon>
+                <polygon id="路径" points="3 3.13076758 4.5 3.13076758 4.5 4.70461621 3 4.70461621"></polygon>
+                <polygon id="路径" points="3 6.27847559 4.5 6.27847559 4.5 7.85232422 3 7.85232422"></polygon>
+                <polygon id="路径" points="1.5 7.85230273 3 7.85230273 3 9.42615137 1.5 9.42615137 1.5 7.85230273"></polygon>
+                <polygon id="路径" points="0 9.42615137 1.5 9.42615137 1.5 11 0 11"></polygon>
+                <polygon id="路径" points="4.5 4.70461621 6 4.70461621 6 6.27846484 4.5 6.27846484"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

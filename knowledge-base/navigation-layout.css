@@ -1,0 +1,165 @@
+html,
+body {
+  min-width: 0;
+}
+
+/* The standalone knowledge-base document does not include the homepage's
+   body typography reset. Keep its shared navigation on the same baseline as
+   every other page, including WeChat's mobile WebView. */
+.nav-container[data-navigation-master-shell="true"] .navbar[data-navigation-master="true"],
+.dropdown-portal {
+  font-family: Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#panda-mobile-navigation-root .panda-mobile-navigation {
+  font-family: Inter, "PingFang SC", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding-top: 72px;
+}
+
+#app > header,
+#app header[class*="sticky"] {
+  top: 72px !important;
+}
+
+/* The knowledge-base app ships with its own legacy brand strip. The shared
+   PandaAI navigation is now the only brand/navigation surface; keep only the
+   document search control in this row. */
+#app header.app-header {
+  justify-content: flex-start !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+#app header.app-header .logo-section {
+  display: none !important;
+}
+
+/* The bundled knowledge-base stylesheet underlines every anchor globally.
+   Shared navigation dropdown links must keep the homepage treatment. */
+.dropdown-portal a,
+.dropdown-portal a:hover,
+.dropdown-portal a:focus,
+.dropdown-portal a:active,
+.dropdown-portal a * {
+  text-decoration: none !important;
+}
+
+@media (min-width: 1025px) {
+  /* The retired brand row must not reserve a blank line. Keep search directly
+     above the sidebar navigation while the document starts alongside it. */
+  #app header.app-header {
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    top: 72px !important;
+    left: 0 !important;
+    right: 0 !important;
+    overflow: visible !important;
+  }
+
+  #app header.app-header .header-content,
+  #app header.app-header .header-center {
+    height: 0 !important;
+    min-height: 0 !important;
+  }
+
+  #app header.app-header .search-box {
+    left: clamp(1rem, 10vw, 12rem) !important;
+    margin: 0 !important;
+    position: absolute !important;
+    right: auto !important;
+    top: 11px !important;
+    width: calc(clamp(200px, 16vw, 280px) - 30px) !important;
+  }
+
+  #app .content-wrapper {
+    margin-top: 11px !important;
+  }
+
+  #app .content-wrapper .markdown-container {
+    padding-top: 0 !important;
+  }
+
+  /* Start the divider at the first visible menu label instead of at the
+     sidebar's sticky container edge. */
+  #app .sidebar {
+    position: sticky;
+    top: 0 !important;
+    border-right: 0 !important;
+  }
+
+  #app .sidebar .menu-container {
+    margin-top: 48px !important;
+  }
+
+  #app .sidebar::after {
+    position: absolute;
+    top: 11px;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    background: #eee;
+    content: "";
+    pointer-events: none;
+  }
+}
+
+/* Prevent video cards from crushing the copy column on laptop-sized layouts. */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  #app .markdown-body .content-with-video {
+    align-items: stretch !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  #app .markdown-body .video-content {
+    aspect-ratio: 16 / 9;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  #app .markdown-body .video-content .lozad-video {
+    height: 100% !important;
+    max-height: none !important;
+    max-width: 100% !important;
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 768px) {
+  #app {
+    padding-top: 55px;
+  }
+
+  #app > header,
+  #app header[class*="sticky"] {
+    top: 55px !important;
+  }
+}
+
+/* The standalone knowledge canvas is light, including its transparent header. */
+@media (max-width: 768px) {
+  #panda-mobile-navigation-root,
+  #panda-mobile-navigation-root * { box-sizing: border-box; }
+  #panda-mobile-navigation-root .panda-mobile-bar {
+    width: 100% !important;
+    color: #111 !important;
+    background: #fff !important;
+  }
+  #panda-mobile-navigation-root .panda-mobile-logo { filter: brightness(0) !important; }
+  #panda-mobile-navigation-root .panda-mobile-toggle { color: #111 !important; }
+}

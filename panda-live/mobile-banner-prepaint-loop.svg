@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="393" height="47" viewBox="0 0 393 47">
+  <defs>
+    <path id="curve" d="M-22 13 Q196 61 415 13" fill="none"/>
+  </defs>
+  <text fill="#050505" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" letter-spacing="-0.5">
+    <textPath href="#curve" startOffset="0">PANDAAI ✦ 赛事活动 ✦ 赞助 ✦ PANDAAI ✦</textPath>
+  </text>
+</svg>

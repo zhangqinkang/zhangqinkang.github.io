@@ -1,0 +1,147 @@
+@media (max-width:0px) {
+  html.panda-mobile-nav-open,
+  html.panda-mobile-nav-open body {
+    background: #000 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+    width: 100% !important;
+  }
+  html.panda-mobile-nav-open #panda-page-scrollbar { display: none !important; }
+  #panda-mobile-navigation-root {
+    bottom: auto !important;
+    height: 55px !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    inset: 0 0 auto 0 !important;
+    pointer-events: none !important;
+    position: fixed !important;
+    width: 1920px !important;
+    z-index: 2147483000 !important;
+  }
+  html:not(.panda-mobile-nav-open) #panda-mobile-navigation-root {
+    mix-blend-mode: difference !important;
+  }
+  html.panda-mobile-nav-open #panda-mobile-navigation-root {
+    mix-blend-mode: normal !important;
+  }
+  .nav-container[data-navigation-master-shell="true"] {
+    box-sizing: border-box !important;
+    left: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    position: fixed !important;
+    right: auto !important;
+    top: 0 !important;
+    transform: none !important;
+    width: 1920px !important;
+    mix-blend-mode: normal !important;
+  }
+  .nav-container:not([data-navigation-master-shell="true"]) .nav-mobile-container,
+  .nav-container[data-navigation-master-shell="true"] .nav-mobile-container > :not(.panda-mobile-navigation) {
+    display: none !important;
+  }
+  .nav-mobile-container.panda-mobile-host {
+    background: transparent !important;
+    box-sizing: border-box !important;
+    height: 55px !important;
+    left: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+    position: fixed !important;
+    right: auto !important;
+    top: 0 !important;
+    width: 1920px !important;
+    z-index: 1001 !important;
+  }
+  @supports selector(:has(*)) {
+    .nav-mobile-container:has(> .panda-mobile-navigation) {
+      background: transparent !important;
+      box-sizing: border-box !important;
+      height: 55px !important;
+      left: 0 !important;
+      margin: 0 !important;
+      max-width: none !important;
+      pointer-events: auto !important;
+      position: fixed !important;
+      right: auto !important;
+      top: 0 !important;
+      width: 1920px !important;
+      z-index: 1001 !important;
+    }
+  }
+  .panda-mobile-navigation { color: #fff; font-family: Inter, "PingFang SC", sans-serif; margin: 0 !important; max-width: none !important; min-width: 1920px !important; pointer-events: none !important; position: relative; width: 1920px !important; }
+  .panda-mobile-bar { align-items: center; backdrop-filter: none; -webkit-backdrop-filter: none; background: transparent; border-bottom: 0; display: flex; height: 54px; justify-content: space-between; margin: 0 !important; max-width: none !important; min-width: 1920px !important; padding: 0 10px 0 15px; pointer-events: auto !important; position: relative; width: 1920px !important; z-index: 2; }
+  #panda-mobile-navigation-root .panda-mobile-bar { mix-blend-mode: normal !important; }
+  html:has(#__nuxt .index[data-v-2abc3f3f]):not(.panda-mobile-nav-open):not(.panda-hero-at-top) #panda-mobile-navigation-root,
+  html:has(#panda-route-outlet .index[data-v-2abc3f3f]):not(.panda-mobile-nav-open):not(.panda-hero-at-top) #panda-mobile-navigation-root {
+    mix-blend-mode: normal !important;
+  }
+  html:has(#__nuxt .index[data-v-2abc3f3f]):not(.panda-mobile-nav-open):not(.panda-hero-at-top) .panda-mobile-bar,
+  html:has(#panda-route-outlet .index[data-v-2abc3f3f]):not(.panda-mobile-nav-open):not(.panda-hero-at-top) .panda-mobile-bar {
+    -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+    backdrop-filter: blur(16px) saturate(140%) !important;
+    background-color: rgba(0, 0, 0, .35) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, .1) !important;
+  }
+  .panda-mobile-home { align-items: center; display: inline-flex; height: 28px; justify-content: center; width: 28px; }
+  .panda-mobile-logo-stack { display: block; height: 24px; position: relative; width: 24px; }
+  .panda-mobile-logo { bottom: 0; filter: brightness(0) invert(1); height: 24px; left: 0; inset: 0; mix-blend-mode: normal; opacity: 1; position: absolute; right: 0; top: 0; transform: none; width: auto; }
+  .panda-mobile-toggle { align-items: center; -webkit-appearance: none; appearance: none; background: none; border: 0; color: #fff !important; cursor: pointer; display: inline-flex; height: 32px; justify-content: center; padding: 0; width: 24px; }
+  .panda-mobile-toggle svg { height: 32px; mix-blend-mode: normal; width: 24px; }
+  .panda-mobile-burger line { transform-box: view-box; transform-origin: 512px 512px; transition: transform .2s cubic-bezier(.22,1,.36,1), opacity .18s ease; }
+  .panda-mobile-burger .top { transform: translateY(-320px); }
+  .panda-mobile-burger .bottom { transform: translateY(320px); }
+  .panda-mobile-burger.is-open .top { transform: rotate(45deg); }
+  .panda-mobile-burger.is-open .bottom { transform: rotate(-45deg); }
+  .panda-mobile-burger.is-open .mid { opacity: 0; }
+  /* Match the live menu: viewport-sized shell, one scrolling body and a
+     non-shrinking footer. The page's animated hero height must not size it. */
+  .panda-mobile-drawer { box-sizing: border-box; background: #000; bottom: 0; display: flex; flex-direction: column; height: 1080px; height: 1080px; left: 0 !important; margin: 0 !important; max-width: none !important; min-width: 1920px !important; overflow: hidden; padding-top: 54px; pointer-events: auto !important; position: fixed; right: auto !important; top: 0 !important; transform: none !important; transition: none !important; width: 1920px !important; z-index: 1; }
+  .panda-mobile-drawer[hidden] { display: none; }
+  .panda-mobile-scroll { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; padding: 8px 0 16px; -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .panda-mobile-scroll::-webkit-scrollbar { display: none; height: 0; width: 0; }
+  .panda-mobile-group + .panda-mobile-group { border-top: .5px solid rgba(255,255,255,.12); }
+  .panda-mobile-group-title { align-items: center; -webkit-appearance: none; appearance: none; background: none; border: 0; color: #fff; cursor: pointer; display: flex; font: inherit; font-size: 1rem; justify-content: space-between; padding: 18px 22px; text-align: left; width: 100%; }
+  .panda-mobile-group-title svg { color: rgba(255,255,255,.45); height: 18px; transition: transform .25s ease; width: 18px; }
+  .panda-mobile-group-title.is-open svg { transform: rotate(180deg); }
+  .panda-mobile-group-body { padding: 0 0 12px; }
+  .panda-mobile-group-body[hidden] { display: none; }
+  .panda-mobile-link { align-items: flex-start; color: inherit; display: flex; gap: 12px; padding: 11px 22px 11px 26px; text-decoration: none; }
+  .panda-mobile-link:active { background: rgba(255,255,255,.06); }
+  .panda-mobile-link--current { background: rgba(255,255,255,.05); box-shadow: inset 3px 0 #fff; }
+  .panda-mobile-link-icon { color: rgba(255,255,255,.8); display: inline-flex; flex: 0 0 auto; height: 18px; margin-top: 2px; width: 18px; }
+  .panda-mobile-link-icon svg { height: 100%; width: 100%; }
+  .panda-mobile-link-text { display: flex; flex-direction: column; min-width: 0; }
+  .panda-mobile-link-title { color: rgba(255,255,255,.9); font-size: .9rem; line-height: 1.4; }
+  .panda-mobile-link-desc { color: rgba(255,255,255,.45); font-size: .7rem; line-height: 1.4; margin-top: 2px; }
+  .panda-mobile-account { border-top: .5px solid rgba(255,255,255,.12); display: flex; flex-direction: column; padding: 14px 22px 6px; }
+  .panda-mobile-account > div { color: rgba(255,255,255,.45); font-size: .8rem; letter-spacing: .08em; padding-bottom: 8px; }
+  .panda-mobile-account a { color: rgba(255,255,255,.9); font-size: .9rem; padding: 10px 4px; text-decoration: none; }
+  .panda-mobile-account a[data-panda-login-link="true"],
+  .panda-mobile-account a[data-panda-login-link="true"] * { cursor: pointer !important; }
+  .panda-mobile-actions { background: #000; border-top: .5px solid rgba(255,255,255,.12); display: flex; flex: 0 0 auto; padding: 14px 22px 20px; padding: 14px 22px calc(20px + env(safe-area-inset-bottom)); }
+  .panda-mobile-actions button { align-items: center; -webkit-appearance: none; appearance: none; background: #fff; border: 1px solid #fff; border-radius: 999px; color: #000; cursor: pointer; display: inline-flex; font: inherit; font-size: .9rem; font-weight: 600; height: 46px; justify-content: center; width: 100%; }
+
+  @supports not (mix-blend-mode: difference) {
+    html:not(.panda-mobile-nav-open) #panda-mobile-navigation-root { mix-blend-mode: normal !important; }
+    .panda-mobile-on-light .panda-mobile-logo { filter: brightness(0) !important; }
+    .panda-mobile-on-light .panda-mobile-toggle { color: #000 !important; }
+    .panda-mobile-on-dark .panda-mobile-logo { filter: brightness(0) invert(1) !important; }
+    .panda-mobile-on-dark .panda-mobile-toggle { color: #fff !important; }
+  }
+}
+@media (min-width:0px) { #panda-mobile-navigation-root, .panda-mobile-navigation { display: none !important; } }
+
+.navbar[data-shared-home-navbar="true"] {
+  font-family: Inter, "PingFang SC", sans-serif;
+}
+
+@media (min-width:0px) {
+  .footer-social .social-link,
+  a.footer-link[href*="github.com"] {
+    cursor: not-allowed !important;
+  }
+}

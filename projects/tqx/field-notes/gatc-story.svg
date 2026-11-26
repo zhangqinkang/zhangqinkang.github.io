@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="550" viewBox="0 0 960 550" role="img" aria-labelledby="title desc">
+  <title id="title">全球 AI 交易锦标赛赛事信息</title>
+  <desc id="desc">Global AI Trading Championship，简称 GATC。由 GATL 联合 TQX、国际券商、算力厂商及 AI 技术平台共同发起，以 AI-only 自动化交易为核心机制。GATL 是推动人工智能与金融交易融合的国际非政府组织。</desc>
+  <defs>
+    <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#f4f7fa"/>
+      <stop offset=".47" stop-color="#b8c7d4"/>
+      <stop offset=".76" stop-color="#edf1f5"/>
+      <stop offset="1" stop-color="#b5c1ca"/>
+    </linearGradient>
+  </defs>
+  <text x="0" y="33" fill="#96a7b7" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="5">GLOBAL AI TRADING CHAMPIONSHIP</text>
+  <text x="-4" y="198" fill="url(#silver)" font-family="Inter,Arial,sans-serif" font-size="156" font-weight="700" letter-spacing="-10">AI-ONLY</text>
+  <text x="1" y="260" fill="#f2f2f0" font-family="PingFang SC,Noto Sans CJK SC,Microsoft YaHei,sans-serif" font-size="45" font-weight="600" letter-spacing="2">全球 AI 交易锦标赛</text>
+  <text x="2" y="346" fill="#bfc4ca" font-family="PingFang SC,Noto Sans CJK SC,Microsoft YaHei,sans-serif" font-size="29">由 GATL 联合 TQX、国际券商、算力厂商及</text>
+  <text x="2" y="388" fill="#bfc4ca" font-family="PingFang SC,Noto Sans CJK SC,Microsoft YaHei,sans-serif" font-size="29">AI 技术平台共同发起的全球性赛事。</text>
+  <text x="2" y="430" fill="#bfc4ca" font-family="PingFang SC,Noto Sans CJK SC,Microsoft YaHei,sans-serif" font-size="29">以 AI-only 自动化交易为核心机制。</text>
+  <text x="2" y="499" fill="#94a4b3" font-family="Inter,Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="4">GATL / GLOBAL AI TRADING LEAGUE</text>
+  <text x="2" y="537" fill="#99a3ab" font-family="PingFang SC,Noto Sans CJK SC,Microsoft YaHei,sans-serif" font-size="25">推动人工智能与金融交易融合的国际非政府组织</text>
+</svg>

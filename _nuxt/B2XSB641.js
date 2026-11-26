@@ -1,0 +1,1 @@
+import{ax as s,j as o,r as c}from"./Dld_Q6gh.js";const i=s("factorhubNav",()=>{const t=c(!1);function a(e){t.value=e}function r(){t.value=!1,n(!1)}function n(e){document.documentElement.style.setProperty("--factorhub-inner-nav-sticky-top",e?"0px":"55px")}return o(t,e=>n(e),{immediate:!0}),{isInnerNavSticky:t,setInnerNavSticky:a,reset:r}});export{i as u};

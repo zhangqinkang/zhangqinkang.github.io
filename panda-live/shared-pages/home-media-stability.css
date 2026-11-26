@@ -1,0 +1,151 @@
+/*
+ * The banner artwork is also painted as the card background. This keeps the
+ * section complete while Vue swaps image nodes or an image transition is
+ * between frames, without adding scroll handlers or runtime decode work.
+ */
+.banner-section .card-sm[data-v-17ad66f0] {
+  background-color: #080808;
+  background-image: url('/panda-live/_nuxt/gldh-mobile-redesign.C-CBIqBD.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.banner-section .card-lg[data-v-17ad66f0] {
+  background-color: #111522;
+  background-image: url('/panda-live/_nuxt/invite-pc-redesign.CDnHY5Hi.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Match the reference's single rounded clip. The moving image stays square;
+ * no dark backplate or second compositor mask remains visible behind it. */
+.banner-section .duo-track .card[data-v-17ad66f0] {
+  background-color: rgba(0, 0, 0, .04);
+  background-image: none;
+  isolation: auto;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.banner-section .duo-track .card[data-v-17ad66f0] > img {
+  border-radius: 0;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
+}
+
+@media (min-width: 769px) {
+  .banner-section .duo-track .card img.swap-enter-active[data-v-17ad66f0],
+  .banner-section .duo-track .card img.swap-leave-active[data-v-17ad66f0] {
+    transition: opacity .6s ease, transform .6s ease;
+  }
+}
+
+/* Pause only elements that actually own continuous animations. The old
+ * universal descendant selector forced a full-section style recalculation
+ * right at the persona/community observer boundary. */
+.page-stack > section[data-panda-motion-active="false"] :is(
+  .ws-panel,
+  .ws-node-dot,
+  .ws-term-cursor,
+  .ag-flow,
+  .ag-av,
+  .ag-bear,
+  .ag-bull,
+  .ag-agent-name,
+  .ag-glyph,
+  .edu-char,
+  .edu-eye,
+  .edu-leaf,
+  .edu-cur,
+  .pe-row--left,
+  .pe-row--right,
+  .loop-conn-path,
+  .comm-deco--tag i
+) {
+  animation-play-state: paused !important;
+}
+
+.page-stack > section[data-panda-motion-active="false"] .ws-link::after,
+.page-stack > section[data-panda-motion-active="false"] .ag-arrow::after,
+.page-stack > section[data-panda-motion-active="false"] .loop-arrow::after {
+  animation-play-state: paused !important;
+}
+
+/* Four large backdrop-filter surfaces overlap the animated chart while this
+ * section enters. On a scrolling page that forces a full blur repaint. The
+ * chart already sits on white, so an opaque equivalent preserves its look and
+ * keeps the transition on composited paths. */
+.comm-card[data-v-2abc3f3f] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: linear-gradient(158deg, #fff, #f9fafc) !important;
+}
+
+/* The original full-section mask forced the animated SVG to be rerasterized as
+ * one large masked surface on every frame. Static white edge overlays preserve
+ * the same fade while the chart and markers can be composited independently. */
+.comm-chart-bg[data-v-2abc3f3f] {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  contain: paint;
+}
+
+.comm-chart-bg[data-v-2abc3f3f]::before,
+.comm-chart-bg[data-v-2abc3f3f]::after {
+  content: "";
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  z-index: 2;
+}
+
+.comm-chart-bg[data-v-2abc3f3f]::before {
+  background: linear-gradient(180deg, #fff, rgba(255, 255, 255, 0));
+  height: 18%;
+  top: 0;
+}
+
+.comm-chart-bg[data-v-2abc3f3f]::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff);
+  bottom: 0;
+  height: 16%;
+}
+
+/* A moving SVG filter creates a new blurred raster on every marker frame. The
+ * marker artwork already includes its own ring, so dropping this soft shadow
+ * does not alter the motion, track, timing, or brand color. */
+.comm-marker[data-v-2abc3f3f] {
+  filter: none !important;
+}
+
+/* Reference carousel controls, scoped to the existing desktop banner. */
+.panda-desktop-banner-nav { display: none; }
+@media (min-width: 769px) {
+  .banner-section .panda-desktop-banner-nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .banner-section .panda-desktop-banner-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid rgba(0,0,0,.18);
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(0,0,0,.75);
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+  }
+  .banner-section .panda-desktop-banner-button:hover { background: rgba(0,0,0,.06); }
+  .banner-section .panda-desktop-banner-button:active { background: rgba(0,0,0,.1); }
+  .banner-section .panda-desktop-banner-button:focus-visible { outline: 2px solid #222; outline-offset: 3px; }
+  .banner-section .panda-desktop-banner-button svg { width: 20px; height: 20px; }
+}

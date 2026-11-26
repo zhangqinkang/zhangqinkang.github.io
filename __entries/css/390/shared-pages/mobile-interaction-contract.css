@@ -1,0 +1,161 @@
+/* Shared coarse-pointer contract. Desktop hover/motion remains unchanged. */
+@media (min-width:0px) and (hover: none), (min-width:0px) and (pointer: coarse) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  /* iOS otherwise promotes U+2197 to the colored Emoji presentation. */
+  .cta-arrow,
+  .tpl-all-arrow,
+  .duo-cta-arrow,
+  .news-arrow,
+  .mobile-banner-cta span,
+  [data-panda-text-arrow="true"] {
+    font-family: Arial, "Helvetica Neue", sans-serif !important;
+    font-variant-emoji: text !important;
+    font-style: normal !important;
+  }
+
+  html body :is(button,[role="button"],.fm-btn,.mobile-nav-option,.panda-mobile-link,
+      .cta,.tpl-all,.tpl-use,.duo-cta,.mobile-banner-cta,.mobile-banner-nav-button,
+      .assistant-btn,.panda-home-white-cta,.panda-home-black-cta) {
+    -webkit-tap-highlight-color: transparent !important;
+    animation: none !important;
+    touch-action: manipulation;
+    transition: none !important;
+  }
+
+  html body button.duo-cta[data-v-17ad66f0] {
+    animation: none !important;
+    transition-duration: 0s !important;
+    transition-property: none !important;
+  }
+
+  html body :is(.cta,.tpl-all,.tpl-use,.duo-cta,.mobile-banner-cta,.mobile-banner-nav-button,
+      .persona-nav button,.assistant-btn,.fm-btn,.fm-user-trigger,.notification-trigger,
+      .mobile-nav-toggle,.mobile-nav-option,.panda-mobile-link):is(:hover,:active,:focus) {
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  html body .cta-primary:is(:hover,:active,:focus) {
+    background-size: 0 100% !important;
+    color: #000 !important;
+  }
+  html body .cta-secondary:is(:hover,:active,:focus) {
+    background: transparent !important;
+    box-shadow: 0 0 18px #ffffff14 !important;
+    color: #fff !important;
+  }
+  html body .tpl-all:is(:hover,:active,:focus) {
+    background-size: 0 100% !important;
+    color: #fff !important;
+  }
+  html body .tpl-use:is(:hover,:active,:focus),
+  html body .duo-cta:is(:hover,:active,:focus) {
+    box-shadow: none !important;
+  }
+  html body .mobile-banner-nav-button:is(:hover,:active,:focus),
+  html body .panda-mobile-link:is(:hover,:active,:focus) {
+    background: transparent !important;
+  }
+
+  /* Fourth Factor Competition: controls keep their tap actions but no longer
+     move, scale, recolor or run a hover transition on a touch screen. */
+  html body .fm-btn:is(:hover,:active,:focus),
+  html body .fm-user-trigger:is(:hover,:active,:focus),
+  html body .notification-trigger:is(:hover,:active,:focus),
+  html body .mobile-nav-toggle:is(:hover,:active,:focus) {
+    transform: none !important;
+  }
+  /* Keep native touch scrolling, but preserve the intended first-screen
+     shrink/round motion through stable CSS variables. The shared script only
+     updates these paint values and never changes scroll position or layout. */
+  .hero[data-v-2abc3f3f] {
+    border-radius: var(--panda-mobile-hero-radius, 0) !important;
+    clip-path: none !important;
+    min-height: 844px !important;
+    overflow: hidden !important;
+    transform: scale(var(--panda-mobile-hero-scale, 1)) !important;
+    transform-origin: center top !important;
+    will-change: transform, border-radius !important;
+  }
+
+  .hero-bg[data-v-2abc3f3f] {
+    clip-path: none !important;
+    object-position: 83% center !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* Hydration adds a second scanning layer after the server-rendered hero
+     image. Its fallback and full-screen canvas use the same phone crop as the
+     first frame; the renderer's internal crop is patched in its runtime. */
+  .scanning-hero.hero-bg .scanning-fallback {
+    object-position: 83% center !important;
+  }
+
+  .scanning-hero.hero-bg .scanning-canvas {
+    display: block !important;
+    object-position: 83% center !important;
+    transform: none !important;
+  }
+
+  /* Keep the reliable astronaut image painted underneath while the live
+     renderer uses the same full-strength composite as iOS. */
+  .scanning-hero.hero-bg .scanning-canvas {
+    opacity: 0 !important;
+    visibility: visible !important;
+  }
+
+  .scanning-hero.hero-bg .scanning-canvas.ready {
+    mix-blend-mode: normal !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  html.panda-android .scanning-hero.hero-bg .scanning-canvas.ready {
+    mix-blend-mode: screen !important;
+  }
+
+  .scanning-hero.hero-bg .scanning-fallback,
+  .scanning-hero.hero-bg .scanning-fallback.hidden {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
+@media (min-width:0px) {
+  /* Paint only behind Safari's translucent bottom toolbar. This is a visual
+     extension: it does not alter hero height, content positions or document
+     flow, and is removed as soon as the page leaves the top. */
+  html.panda-hero-at-top .hero[data-v-2abc3f3f] {
+    box-shadow: 0 96px 0 0 #000 !important;
+    z-index: 2;
+  }
+
+  /* Use one stable full-screen stage for the background and all hero content.
+     This matches the 390×844 preview instead of lifting the copy when Safari
+     exposes its bottom toolbar. The toolbar may overlay the black stage, but
+     it no longer changes the composition or exposes the next section. */
+  @supports (height: 100lvh) {
+    html:not(.panda-android) .hero[data-v-2abc3f3f] {
+      height: var(--panda-smooth-viewport-height, 100lvh) !important;
+      min-height: var(--panda-smooth-viewport-height, 100lvh) !important;
+      max-height: var(--panda-smooth-viewport-height, 100lvh) !important;
+      padding-bottom: clamp(64px, 14lvh, 120px) !important;
+    }
+  }
+
+  /* Android Chrome reports a larger `lvh` than its currently visible page
+     area while the address bar is present. Keep the complete first screen
+     inside the real dynamic viewport instead of extending beneath it. */
+  html.panda-android .hero[data-v-2abc3f3f] {
+    height: var(--panda-smooth-viewport-height, 844px) !important;
+    min-height: var(--panda-smooth-viewport-height, 844px) !important;
+    max-height: var(--panda-smooth-viewport-height, 844px) !important;
+    padding-bottom: clamp(48px, 67.52px, 72px) !important;
+  }
+}

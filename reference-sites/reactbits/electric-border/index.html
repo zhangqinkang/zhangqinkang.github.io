@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>React Bits · Homepage to Electric Border</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #120f17; }
+    .stage, .home, .detail { position: absolute; inset: 0; }
+    .home {
+      z-index: 2; overflow: hidden;
+      background: #120f17 url('/reference-sites/reactbits-home.png') top center / 100% auto no-repeat;
+      opacity: 1; transition: none;
+    }
+    .home.is-leaving { opacity: 0; transform: scale(1.018); pointer-events: none; }
+    .detail { z-index: 1; opacity: 0; transition: none; }
+    .detail.is-visible { opacity: 1; }
+    .detail iframe { display: block; width: 100%; height: 100%; border: 0; background: #120f17; }
+    .cursor {
+      position: absolute;
+      z-index: 4;
+      left: 84%;
+      top: 18%;
+      width: 24px;
+      height: 32px;
+      opacity: 0;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.7));
+      transform: translate(-3px, -2px) rotate(-17deg);
+      pointer-events: none;
+    }
+    .cursor::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: white;
+      clip-path: polygon(0 0, 73% 69%, 44% 72%, 57% 100%, 42% 100%, 29% 75%, 0 92%);
+    }
+    .cursor::after {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      background: #17121c;
+      clip-path: polygon(0 0, 73% 69%, 44% 72%, 57% 100%, 42% 100%, 29% 75%, 0 92%);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .home, .detail { transition-duration: .01ms; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <section class="home" aria-label="React Bits 官网首页">
+      <i class="cursor" aria-hidden="true"></i>
+    </section>
+    <section class="detail" aria-label="Electric Border 组件详情">
+      <iframe name="entry-delay-4200" title="React Bits · Electric Border 原动态演示" scrolling="no"></iframe>
+    </section>
+  </div>
+  <script>
+    const home = document.querySelector('.home')
+    const detail = document.querySelector('.detail')
+    const frame = document.querySelector('iframe')
+    const cursor = document.querySelector('.cursor')
+    let timers = []
+
+    function suppressAnnouncement() {
+      try {
+        window.localStorage.setItem('rb-pro-august-release-seen', 'true')
+      } catch (_) {}
+
+      try {
+        const document = frame.contentDocument
+        if (!document || document.getElementById('portfolio-hide-react-bits-announcement')) return
+
+        const style = document.createElement('style')
+        style.id = 'portfolio-hide-react-bits-announcement'
+        style.textContent = `
+          .announcement-modal-backdrop,
+          .announcement-modal-overlay,
+          .announcement-modal {
+            display: none !important;
+          }
+        `
+        document.head.appendChild(style)
+      } catch (_) {}
+    }
+
+    frame.addEventListener('load', suppressAnnouncement)
+
+    function later(callback, delay) {
+      const timer = window.setTimeout(callback, delay)
+      timers.push(timer)
+    }
+
+    function play() {
+      timers.forEach(window.clearTimeout)
+      timers = []
+      suppressAnnouncement()
+      frame.src = '/reactbits-electric-official-20260814.html?v=20260814f&entryDelay=4200'
+      home.className = 'home'
+      detail.className = 'detail'
+      cursor.style.opacity = '0'
+      cursor.style.left = '84%'
+      cursor.style.top = '18%'
+      cursor.style.transform = 'translate(-3px,-2px) rotate(-17deg) scale(1)'
+
+      later(() => {
+        cursor.style.opacity = '1'
+        cursor.style.transition = 'left 1.45s cubic-bezier(.22,.61,.36,1), top 1.45s cubic-bezier(.22,.61,.36,1), transform .16s ease, opacity .2s ease'
+        cursor.style.left = '10.7%'
+        cursor.style.top = '42.6vw'
+      }, 1850)
+      later(() => {
+        home.classList.add('is-clicked')
+        cursor.style.transform = 'translate(-3px,-2px) rotate(-17deg) scale(.78)'
+      }, 3820)
+      later(() => {
+        detail.classList.add('is-visible')
+        home.classList.add('is-leaving')
+      }, 4200)
+      later(play, 27000)
+    }
+
+    play()
+  </script>
+</body>
+</html>

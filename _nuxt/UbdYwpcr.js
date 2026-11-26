@@ -1,0 +1,1 @@
+import{a0 as a}from"./Dld_Q6gh.js";const s={},e=n=>(o,r)=>a({type:n,message:String(o??""),...r!=null?{duration:r*1e3}:{},...s.zIndex!=null?{zIndex:s.zIndex}:{}}),i={success:e("success"),error:e("error"),info:e("info"),warning:e("warning"),config(n){n.zIndex!=null&&(s.zIndex=n.zIndex)}};export{i as m};

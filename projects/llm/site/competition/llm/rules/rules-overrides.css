@@ -1,0 +1,83 @@
+@font-face{font-display:swap;font-family:fusion-pixel;font-style:normal;font-weight:400;src:url(/projects/llm/site/_nuxt/fusion-pixel.CrxqOKMS.otf) format("opentype")}
+@font-face{font-display:swap;font-family:PuHuiTi_Regular;font-style:normal;font-weight:400;src:url(/projects/llm/site/_nuxt/Alibaba_PuHuiTi_2.0_55_Regular_55_Regular.v0Jvxhj3.ttf) format("truetype")}
+*{box-sizing:border-box}
+html{background:#f7f7f8;color:#111;scrollbar-width:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
+body{margin:0;min-width:320px}
+a{color:inherit;text-decoration:none}
+.rules-page{background:#f7f7f8;font-family:fusion-pixel,sans-serif;min-height:100vh;padding:0 0 235px}
+.rules-hero{height:413px;padding-top:159px;position:relative;text-align:center}
+.rules-back{align-items:center;background:transparent;border:0;border-radius:0;box-shadow:none;color:#111;cursor:pointer;display:inline-flex;font:11px fusion-pixel,sans-serif;gap:5px;height:30px;left:13.54165vw;padding:0;position:absolute;top:28px}
+.rules-back img{display:block;height:12px;width:17px}
+.rules-title-row{align-items:center;display:flex;gap:34px;justify-content:center}
+.rules-title-row h1{font-family:fusion-pixel,sans-serif;font-size:52px;font-weight:400;letter-spacing:.045em;line-height:1;margin:0;white-space:nowrap}
+.rules-scroll-icon{align-items:center;display:flex;flex:0 0 124px;height:82px;justify-content:center;overflow:visible;width:124px}
+.rules-scroll-icon img{display:block;height:82px;image-rendering:pixelated;max-width:124px;object-fit:contain;position:static;width:124px}
+.rules-hero>p{font-family:fusion-pixel,sans-serif;font-size:30px;line-height:1;margin:42px 0 0}
+.rules-document{background:#fff;border:1px solid #161616;border-radius:18px;box-shadow:4px 4px 0 #111;height:4487px;margin:0 auto;overflow:hidden;padding-top:56px;width:min(1400px,72.9167%)}
+.rules-section:nth-child(1){height:534px}.rules-section:nth-child(2){height:717px}.rules-section:nth-child(3){height:583px}.rules-section:nth-child(4){height:1492px}.rules-section:nth-child(5){height:1105px}
+.rules-section h2{align-items:center;background:linear-gradient(90deg,#ededed 0,#f3f3f3 55%,#fff 88%);display:flex;font-family:fusion-pixel,sans-serif;font-size:20px;font-weight:400;height:51px;margin:0;padding:0 48px}
+.rules-copy{color:#151515;font-family:PuHuiTi_Regular,sans-serif;font-size:14px;line-height:28px;padding:36px 48px 52px}
+.rules-copy p{margin:0}
+.rules-copy p+p{margin-top:5px}
+.rules-copy ul{margin:0;padding-left:20px}
+.rules-copy li{padding-left:2px}
+.rules-flow{display:flex;flex-direction:column;gap:34px}
+.rules-flow>div{display:flex;flex-direction:column}
+.rules-copy h3,.rules-copy h4{font-family:fusion-pixel,sans-serif;font-weight:400;line-height:1.45;margin:0}
+.rules-copy h3{font-size:15px;margin-bottom:12px}
+.rules-copy h4{color:#7655cf;font-size:13px;margin:14px 0 6px}
+.rules-note{margin-top:12px!important}
+.rules-facts,.rules-definitions{margin:0}
+.rules-facts div,.rules-definitions div{display:flex;gap:8px}
+.rules-facts dt,.rules-definitions dt{font-weight:700}
+.rules-facts dd,.rules-definitions dd{margin:0}
+.rules-formula-block{display:flex;flex-direction:column;gap:18px;padding:8px 14px 2px}
+.rules-formula-block h3{margin-bottom:0}
+.rules-formula-block h4{color:#111;margin:0}
+.rules-section:nth-child(3) .rules-flow{gap:14px}
+.rules-formula{font-family:fusion-pixel,sans-serif;font-size:21px;line-height:42px;text-align:center;width:min(810px,62.1166%)}
+.rules-section:nth-child(4) .rules-copy>div:last-child{transform:translateY(100px)}
+.rules-points-table{border:1px solid #bdbdbd;border-collapse:separate;border-radius:8px;border-spacing:0;margin-top:57px;overflow:hidden;table-layout:fixed;width:min(810px,62.1166%)}
+.rules-points-table th,.rules-points-table td{border-bottom:1px solid #d1d1d1;border-right:1px solid #d1d1d1;padding:0 34px;text-align:left}
+.rules-points-table th{height:60px}.rules-points-table td{height:52px}
+.rules-points-table th{background:#888;color:#fff;font-family:fusion-pixel,sans-serif;font-size:13px;font-weight:400}
+.rules-points-table td{font-family:PuHuiTi_Regular,sans-serif;font-size:13px}
+.rules-points-table tr:last-child td{border-bottom:0}
+.rules-points-table th:last-child,.rules-points-table td:last-child{border-right:0}
+.rules-points-table th:first-child,.rules-points-table td:first-child{width:40.5%}
+.rules-points-table th:last-child,.rules-points-table td:last-child{width:59.5%}
+.rules-awards{display:flex;flex-direction:column;gap:13px;list-style:decimal;margin:0;padding-left:24px}
+.rules-awards li{padding-left:4px}
+.rules-awards strong{display:block;font-family:fusion-pixel,sans-serif;font-size:13px;font-weight:400}
+.rules-awards span{display:block;font-family:PuHuiTi_Regular,sans-serif}
+@media(max-width:1100px){
+  .rules-title-row h1{font-size:40px}
+  .rules-title-row{gap:24px}
+  .rules-hero>p{font-size:28px}
+}
+@media(min-width:1920px){
+  .rules-back{left:max(5vw,calc((100vw - 1400px)/2))}
+}
+@media(max-width:760px){
+  .rules-page{padding-bottom:80px}
+  .rules-hero{height:310px;padding-top:116px}
+  .rules-back{left:15px;top:15px}
+  .rules-title-row{gap:8px;padding:0 4px}
+  .rules-title-row h1{font-size:21px;letter-spacing:0}
+  .rules-scroll-icon{flex:0 0 73px;height:58px;width:73px}
+  .rules-scroll-icon img{height:58px;max-width:73px;width:73px}
+  .rules-hero>p{font-size:21px;margin-top:12px}
+  .rules-document{border-radius:10px;box-shadow:3px 3px 0 #111;height:auto;min-height:0;padding-top:0;width:calc(100vw - 30px)}
+  .rules-section:nth-child(n){height:auto}
+  .rules-section h2{font-size:14px;height:42px;padding:0 16px}
+  .rules-copy{font-size:13px;line-height:24px;padding:22px 16px 30px}
+  .rules-flow{gap:26px}
+  .rules-copy h3{font-size:13px}
+  .rules-copy h4{font-size:12px}
+  .rules-formula{font-size:16px;line-height:34px}
+  .rules-points-table{width:100%}
+  .rules-points-table th,.rules-points-table td{height:42px;padding:0 12px}
+  .rules-section:nth-child(4) .rules-copy>div:last-child{transform:none}
+  .rules-points-table{margin-top:22px}
+}

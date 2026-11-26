@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN" translate="no" class="notranslate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <script>
+      if (/^(192\.168\.|10\.|127\.|localhost$)/.test(location.hostname)) {
+        const report = (event, detail) => {
+          try { navigator.sendBeacon('/__panda_mobile_trace', JSON.stringify({type:'portfolio-boot',event,detail,at:Date.now(),ua:navigator.userAgent,path:location.pathname})) } catch {}
+        }
+        addEventListener('error', e => report('error', {message:e.message,stack:String(e.error?.stack||'').slice(0,1400),file:e.filename,resource:e.target?.src||e.target?.href}),true)
+        addEventListener('unhandledrejection', e => report('rejection', {message:String(e.reason?.stack||e.reason).slice(0,1400)}))
+        addEventListener('load', () => setTimeout(() => report('loaded', {children:document.getElementById('root')?.childElementCount,text:document.getElementById('root')?.innerText?.slice(0,80)}),1000),{once:true})
+        addEventListener('DOMContentLoaded', () => setTimeout(() => report('dom', {children:document.getElementById('root')?.childElementCount,text:document.getElementById('root')?.innerText?.slice(0,80),background:getComputedStyle(document.body).backgroundColor,styles:document.styleSheets.length,resources:performance.getEntriesByType('resource').filter(r=>/\.(js|css)(\?|$)/.test(r.name)).map(r=>({name:r.name,duration:r.duration,bytes:r.transferSize}))}),3000),{once:true})
+        addEventListener('pagehide', e => report('pagehide',{persisted:e.persisted,y:scrollY}))
+        addEventListener('beforeunload', () => report('beforeunload',{y:scrollY}))
+        addEventListener('pageshow', e => {if(e.persisted)report('pageshow',{persisted:true,y:scrollY})})
+        report('html', {navigation:performance.getEntriesByType('navigation')[0]?.type,discarded:document.wasDiscarded||false})
+      }
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="google" content="notranslate" />
+    <meta name="description" content="张勤康个人作品集网站。" />
+    <script>
+      if (!/^\/projects\/llm\/?$/.test(location.pathname)) {
+        for (const attributes of [{"rel":"preload","as":"image","href":"/project-mockups/tqx-scene-v10-opposed-soft.png","fetchpriority":"high","media":"(max-width: 767px) and (pointer: coarse)"},{"rel":"preload","as":"image","href":"/project-mockups/taskboard-scene-v11-board-view-rounded-corner.png","fetchpriority":"high","media":"(max-width: 767px) and (pointer: coarse)"},{"rel":"preload","as":"image","href":"/project-mockups/llm-arena-wall-v14.png","fetchpriority":"high"},{"rel":"preload","as":"image","href":"/project-mockups/pandaai-scene-v36-rigid-half-corrected.png","fetchpriority":"high"},{"rel":"preload","as":"image","href":"/project-mockups/llm-phone-glass-composite.png?v=11","fetchpriority":"high"},{"rel":"preload","as":"image","href":"/projects/llm/screens/prediction.jpg","fetchpriority":"high"},{"rel":"preload","as":"image","href":"/projects/llm/screens/live-mobile.jpg","fetchpriority":"high"},{"rel":"preload","as":"image","href":"/marquee/thumbs/12-home.webp"},{"rel":"preload","as":"image","href":"/marquee/thumbs/01-home-2.webp"},{"rel":"preload","as":"image","href":"/marquee/thumbs/05-store-home.webp"},{"rel":"preload","as":"image","href":"/marquee/thumbs/04-super-chart-agent.webp"},{"rel":"preload","as":"image","href":"/marquee/thumbs/11-super-chart-collapsed.webp"}]) {
+          const link = document.createElement('link');
+          for (const [name,value] of Object.entries(attributes)) link.setAttribute(name,value);
+          document.head.append(link);
+        }
+      }
+    </script>
+    <title>张勤康-个人作品集网站</title>
+    <script type="module" crossorigin src="/assets/index-C_YUaifs.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-aRib4OP-.css">
+  <script defer src="/__portfolio_card_cursor_v1.js"></script></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

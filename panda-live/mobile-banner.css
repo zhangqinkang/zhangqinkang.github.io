@@ -1,0 +1,229 @@
+@media (max-width: 768px) {
+  .banner-section[data-v-2abc3f3f]
+    .curved-loop-jacket[data-v-1b779794][style*="visibility:hidden"] {
+    background: url("/panda-live/mobile-banner-prepaint-loop.svg") center / 100% 100% no-repeat;
+    visibility: visible !important;
+  }
+
+  .banner-section[data-v-2abc3f3f]
+    .curved-loop-jacket[data-v-1b779794][style*="visibility:hidden"]
+    .curved-loop-svg[data-v-1b779794] {
+    opacity: 0;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0] {
+    padding: 0 clamp(16px, 6vw, 120px);
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0] .duo-track[data-v-17ad66f0] {
+    align-items: flex-start;
+    aspect-ratio: auto;
+    height: auto !important;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0] .card-sm[data-v-17ad66f0] {
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    flex: 1 1 auto;
+    height: auto;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0] .card-lg[data-v-17ad66f0] {
+    display: none;
+  }
+
+  /*
+   * The SSR markup still contains the legacy GLDH slide. Paint the exact local
+   * Qube starting state before Vue hydrates and the carousel layer takes over,
+   * so a cold navigation never exposes the old mobile banner for one frame.
+   */
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0]:not(.mobile-banner-native)
+    .card-sm[data-v-17ad66f0] {
+    background: #fff;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0]:not(.mobile-banner-native)
+    .card-sm[data-v-17ad66f0]::after {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 3;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0]:not(.mobile-banner-native)
+    .card-sm[data-v-17ad66f0] > img {
+    content: url("/panda-live/_nuxt/qube-mobile.CUEihv14.webp");
+    transform: none;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0]:not(.mobile-banner-native)
+    .card-sm[data-v-17ad66f0] > .duo-cta {
+    background: #0a0a0a;
+    color: #fff;
+    font-size: 0;
+    transition: none;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0]:not(.mobile-banner-native)
+    .card-sm[data-v-17ad66f0] > .duo-cta::before {
+    content: "立即体验";
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0]:not(.mobile-banner-native)
+    .duo-cta-arrow[data-v-17ad66f0] {
+    font-size: 13.3px;
+  }
+
+  .banner-section[data-v-2abc3f3f] .duo-container[data-v-17ad66f0]:not(.mobile-banner-native)::after {
+    background: url("/panda-live/mobile-banner-prepaint-nav.svg") center / 90px 40px no-repeat;
+    content: "";
+    display: block;
+    height: 40px;
+    margin-left: auto;
+    margin-top: 14px;
+    width: 90px;
+  }
+
+  .mobile-banner-native .card-sm[data-v-17ad66f0] > img,
+  .mobile-banner-native .card-sm[data-v-17ad66f0] > .duo-cta {
+    visibility: hidden;
+  }
+
+  .mobile-banner-layer {
+    border-radius: inherit;
+    inset: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: 4;
+  }
+
+  .mobile-banner-layer::after {
+    border: 1px solid transparent;
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    transition: border-color 0.7s 0.5s;
+    z-index: 3;
+  }
+
+  .mobile-banner-layer--light::after {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-banner-image {
+    display: block;
+    height: 100%;
+    inset: 0;
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+  }
+
+  .mobile-banner-image.is-entering,
+  .mobile-banner-image.is-leaving {
+    transition: opacity 0.7s ease 0.5s, transform 0.7s ease 0.5s;
+  }
+
+  .mobile-banner-image.is-entering {
+    opacity: 0;
+    transform: translateX(var(--banner-enter-x));
+  }
+
+  .mobile-banner-image.is-entering.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .mobile-banner-image.is-leaving.is-hidden {
+    opacity: 0;
+    transform: translateX(var(--banner-leave-x));
+  }
+
+  .mobile-banner-cta {
+    align-items: center;
+    background: #fff;
+    border: none;
+    border-radius: 999px;
+    bottom: clamp(12px, 1.6vw, 24px);
+    color: #000;
+    cursor: pointer;
+    display: inline-flex;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 4px;
+    height: 40px;
+    left: clamp(12px, 1.6vw, 24px);
+    padding: 0 18px;
+    position: absolute;
+    transition: background 0.7s 0.5s, color 0.7s 0.5s, box-shadow 0.15s, transform 0.2s;
+    white-space: nowrap;
+    z-index: 2;
+  }
+
+  .mobile-banner-cta--light {
+    background: #0a0a0a;
+    color: #fff;
+  }
+
+  .mobile-banner-cta:hover {
+    box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07);
+    transform: translateY(-1px);
+  }
+
+  .mobile-banner-cta--light:hover {
+    box-shadow: inset 0 0 0 999px hsla(0, 0%, 100%, 0.14);
+  }
+
+  .mobile-banner-cta span {
+    font-size: 0.95em;
+  }
+
+  .mobile-banner-nav {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 14px;
+  }
+
+  .mobile-banner-nav-button {
+    align-items: center;
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 50%;
+    color: rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+    display: flex;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+    width: 40px;
+  }
+
+  .mobile-banner-nav-button:active {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-banner-nav-button:focus {
+    outline: none;
+  }
+
+  .mobile-banner-nav-button svg {
+    height: 20px;
+    width: 20px;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-banner-native .mobile-banner-layer,
+  .mobile-banner-native .mobile-banner-nav {
+    display: none;
+  }
+}

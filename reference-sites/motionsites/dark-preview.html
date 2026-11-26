@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MotionSites dark reference preview</title>
+    <style>
+      html, body, iframe { width: 100%; height: 100%; margin: 0; border: 0; background: #111; }
+      body { overflow: hidden; }
+      iframe { display: block; transform: translateZ(0); }
+    </style>
+  </head>
+  <body>
+    <iframe id="motionsites" title="MotionSites"></iframe>
+    <script>
+      const frame = document.querySelector('#motionsites');
+      const phoneReference = Boolean(window.frameElement?.closest('.panda-reference-live-window')) && parent.matchMedia('(max-width: 820px)').matches;
+      frame.src = phoneReference ? 'mobile-preview.html?v=20261010-4' : 'index.html?v=20260814e';
+      if (phoneReference) frame.style.transform = 'none';
+      let animationFrame;
+      let motionStarted = false;
+      let pageScrolling = false;
+      const readyTimer = setInterval(() => {
+        if (!frame.contentWindow?.__portfolioReferenceReady) return;
+        clearInterval(readyTimer);
+        useDarkReference(); startSmoothScroll();
+        window.__portfolioReferenceReady = true;
+        parent.postMessage({type:'portfolio-reference-ready'}, location.origin);
+      }, 100);
+      window.addEventListener('message', event => {
+        if (event.source === frame.contentWindow && event.origin === location.origin && event.data?.type === 'portfolio-motion-reference-ready') {
+          useDarkReference();
+          startSmoothScroll();
+          parent.postMessage({ type: 'portfolio-reference-ready' }, location.origin);
+        }
+        if (event.data?.type === 'portfolio-scroll-state') pageScrolling = Boolean(event.data.active);
+      });
+      function useDarkReference() {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        if (!doc.getElementById('portfolio-hide-embedded-logo')) {
+          const style = doc.createElement('style');
+          style.id = 'portfolio-hide-embedded-logo';
+          style.textContent = 'nav a:has(> img[alt="MotionSites logo"]) { display: none !important; }';
+          doc.head.appendChild(style);
+        }
+        const rivr = [...doc.querySelectorAll('img')].find(image => image.alt === 'RIVR DeFi');
+        const originalFinlytic = [...doc.querySelectorAll('img')].find(image => image.alt === 'Finlytic AI Agent');
+        if (!rivr) return;
+        if (rivr.dataset.motionSrc) {
+          rivr.dataset.motionSrc = 'mobile-assets/hero-finlytic-preview-CV9g0FHP.webp';
+          if (rivr.dataset.motionActive === 'true') rivr.src = rivr.dataset.motionSrc;
+        } else rivr.src = 'assets/hero-finlytic-preview-CV9g0FHP.gif';
+        rivr.alt = 'Finlytic AI Agent';
+        const card = rivr.closest('.prompt-card-hover');
+        const title = card && card.querySelector('h3');
+        if (title) title.textContent = 'Finlytic AI Agent';
+        if (originalFinlytic && originalFinlytic !== rivr) {
+          originalFinlytic.closest('.prompt-card-hover')?.remove();
+        }
+      }
+      function startSmoothScroll() {
+        const win = frame.contentWindow;
+        const doc = frame.contentDocument;
+        if (!win || !doc || motionStarted) return;
+        motionStarted = true;
+
+        const nativeScrollTo = win.scrollTo.bind(win);
+        if (!phoneReference) nativeScrollTo(0, 0);
+        win.scrollTo = () => {};
+
+        const page = doc.body;
+        page.style.willChange = phoneReference ? 'auto' : 'transform';
+        page.style.transformOrigin = 'top left';
+        doc.documentElement.style.overflow = 'hidden';
+
+        let position = 0;
+        let direction = 1;
+        let hold = phoneReference ? 0 : 2600;
+        let previousTime = performance.now();
+        if (phoneReference) {
+          const entryObserver = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) hold = 0; });
+          entryObserver.observe(document.documentElement);
+        }
+
+        function animate(time) {
+          const delta = Math.min(time - previousTime, 40);
+          previousTime = time;
+          if (pageScrolling && !phoneReference) {
+            animationFrame = requestAnimationFrame(animate);
+            return;
+          }
+          const limit = Math.min(
+            Math.max(0, doc.documentElement.scrollHeight - win.innerHeight),
+            win.innerHeight
+          );
+
+          if (hold > 0) {
+            hold -= delta;
+          } else {
+            position += direction * 0.28 * delta;
+            if (position >= limit) {
+              position = limit;
+              direction = -1;
+              hold = 700;
+            } else if (position <= 0) {
+              position = 0;
+              direction = 1;
+              hold = 2600;
+            }
+            page.style.transform = phoneReference ? `translate(0, ${-position}px)` : `translate3d(0, ${-position}px, 0)`;
+          }
+
+          animationFrame = requestAnimationFrame(animate);
+        }
+
+        cancelAnimationFrame(animationFrame);
+        animationFrame = requestAnimationFrame(animate);
+      }
+
+      frame.addEventListener('load', () => {
+        let attempts = 0;
+        const replacementTimer = setInterval(() => {
+          useDarkReference();
+          attempts += 1;
+          if (attempts >= 8) clearInterval(replacementTimer);
+        }, 300);
+        setTimeout(startSmoothScroll, 900);
+      });
+    </script>
+  </body>
+</html>

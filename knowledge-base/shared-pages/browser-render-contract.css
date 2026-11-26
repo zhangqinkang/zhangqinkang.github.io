@@ -1,0 +1,142 @@
+/*
+ * Cross-engine rendering contract for elements that animate their media.
+ * WebKit may promote a transformed child to a separate compositor layer;
+ * the explicit mask keeps the inherited rounded clip on that layer.
+ */
+.card[data-v-17ad66f0] {
+  isolation: isolate;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+}
+
+.card[data-v-17ad66f0] > img {
+  border-radius: inherit;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/*
+ * Keep persona-card artwork inside the same rounded compositor clip.
+ * WebKit can otherwise promote the bottom SVG scene above overflow:hidden
+ * and paint square pixels through the two lower corners.
+ */
+.persona[data-v-2abc3f3f] {
+  isolation: isolate;
+  overflow: hidden !important;
+}
+
+.persona[data-v-2abc3f3f] > .persona-body[data-v-2abc3f3f] {
+  border-radius: inherit;
+  -webkit-clip-path: inset(0 round 24px);
+  clip-path: inset(0 round 24px);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+}
+
+.persona--studio .edu-scene[data-v-2abc3f3f],
+.persona--studio .edu-scene[data-v-2abc3f3f] > svg {
+  border-radius: 0 0 24px 24px;
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/*
+ * Persona cards must enter the viewport with their information already
+ * committed. Delayed fill animations can leave WebKit/WebView compositing an
+ * empty information layer for its first visible frame. Keep the cards' ambient
+ * motion, but render these one-time staggered details in their final state.
+ */
+.persona--workspace .ws-node-dot[data-v-2abc3f3f],
+.persona--workspace .ws-term-line[data-v-2abc3f3f],
+.persona--pipeline .ag-src[data-v-2abc3f3f],
+.persona--pipeline .ag-chip[data-v-2abc3f3f] {
+  animation-name: none !important;
+  animation-delay: 0s !important;
+}
+
+.persona--workspace .ws-term-line[data-v-2abc3f3f],
+.persona--pipeline .ag-src[data-v-2abc3f3f],
+.persona--pipeline .ag-chip[data-v-2abc3f3f] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.persona-cards[data-v-2abc3f3f],
+.persona[data-v-2abc3f3f],
+.persona-body[data-v-2abc3f3f] {
+  content-visibility: visible !important;
+}
+
+/*
+ * Desktop Safari must not turn whole off-screen homepage sections into lazy
+ * compositor layers. The former contain:paint + translateZ(0) contract saved
+ * work while a section was off screen, but WebKit then committed that layer
+ * only after it became visible. The result was a white/empty frame followed by
+ * the complete section flashing in.
+ *
+ * Motion is still paused by the component's original is-inview rules. This
+ * contract only keeps the section artwork paintable before it scrolls into the
+ * viewport; it does not force any entry animation to start early.
+ */
+@media (min-width: 901px) {
+  html.panda-desktop-safari .page-stack[data-v-2abc3f3f] > section:not(.hero),
+  html.panda-desktop-safari .banner-section[data-v-2abc3f3f],
+  html.panda-desktop-safari .tpl-section[data-v-2abc3f3f],
+  html.panda-desktop-safari .loop-section[data-v-2abc3f3f],
+  html.panda-desktop-safari .section--tall[data-v-2abc3f3f],
+  html.panda-desktop-safari .comm-section[data-v-2abc3f3f],
+  html.panda-desktop-safari .duo-container,
+  html.panda-desktop-safari .duo-track,
+  html.panda-desktop-safari .tpl-wrap[data-v-2abc3f3f],
+  html.panda-desktop-safari .tpl-stack[data-v-2abc3f3f],
+  html.panda-desktop-safari .loop-flow[data-v-2abc3f3f],
+  html.panda-desktop-safari .persona-head[data-v-2abc3f3f],
+  html.panda-desktop-safari .persona-cards[data-v-2abc3f3f],
+  html.panda-desktop-safari .comm-head[data-v-2abc3f3f],
+  html.panda-desktop-safari .comm-stage[data-v-2abc3f3f],
+  html.panda-desktop-safari .comm-chart-bg[data-v-2abc3f3f],
+  html.panda-desktop-safari .comm-cards[data-v-2abc3f3f] {
+    content-visibility: visible !important;
+    contain: none !important;
+    will-change: auto !important;
+  }
+
+  html.panda-desktop-safari .persona[data-v-2abc3f3f] {
+    content-visibility: visible !important;
+    contain: none !important;
+    will-change: auto !important;
+  }
+
+  html.panda-desktop-safari .persona[data-v-2abc3f3f]
+    > .persona-body[data-v-2abc3f3f] {
+    -webkit-clip-path: none;
+    clip-path: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+/*
+ * SSR/hydration and inactive-state guard. The controller explicitly starts
+ * Web Animations even when Vue hydrated the section as already active. This
+ * avoids both a missing entrance and JavaScript path geometry work per frame.
+ */
+.comm-line[data-v-2abc3f3f],
+.comm-marker[data-v-2abc3f3f] {
+  transition: none !important;
+}
+
+/* Desktop Safari uses SVG point geometry for this chart only. */
+html.panda-desktop-safari .comm-marker[data-v-2abc3f3f] {
+  offset-path: none !important;
+  offset-distance: 0 !important;
+}
+
+.comm-section:not([data-panda-svg-motion="true"]) .comm-line[data-v-2abc3f3f] {
+  stroke-dashoffset: 1 !important;
+}
+
+.comm-section:not([data-panda-svg-motion="true"]) .comm-marker[data-v-2abc3f3f] {
+  opacity: 0 !important;
+}

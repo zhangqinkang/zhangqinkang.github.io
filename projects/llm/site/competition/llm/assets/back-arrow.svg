@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="17px" height="12px" viewBox="0 0 17 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>编组 13</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="排行榜3" transform="translate(-275, -116)">
+            <g id="编组-14" transform="translate(283, 122) scale(-1, 1) translate(-283, -122)translate(275, 116)">
+                <line x1="-9.40914013e-14" y1="6" x2="15" y2="6" id="直线-7" stroke="#000000" stroke-width="1.5" stroke-linecap="square" stroke-dasharray="0.75,2.25"></line>
+                <g id="像素箭头" transform="translate(9.25, 0)" fill="#000000" fill-rule="nonzero">
+                    <polygon id="路径" points="0 0 1.6875 0 1.6875 1.69846875 0 1.69846875"></polygon>
+                    <polygon id="路径" points="1.6875 1.69845703 3.375 1.69845703 3.375 3.41538281 1.6875 3.41538281 1.6875 1.69845703"></polygon>
+                    <polygon id="路径" points="3.375 3.41538281 5.0625 3.41538281 5.0625 5.13230859 3.375 5.13230859"></polygon>
+                    <polygon id="路径" points="3.375 6.84924609 5.0625 6.84924609 5.0625 8.56617188 3.375 8.56617187"></polygon>
+                    <polygon id="路径" points="1.6875 8.56614844 3.375 8.56614844 3.375 10.2830742 1.6875 10.2830742 1.6875 8.56614844"></polygon>
+                    <polygon id="路径" points="0 10.2830742 1.6875 10.2830742 1.6875 12 0 12"></polygon>
+                    <polygon id="路径" points="5.0625 5.13230859 6.75 5.13230859 6.75 6.84923437 5.0625 6.84923437"></polygon>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

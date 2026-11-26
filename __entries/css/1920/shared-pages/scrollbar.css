@@ -1,0 +1,104 @@
+/* The fourth Factor Competition page is the single source of truth for the
+   viewport scrollbar. Hide every native viewport/legacy indicator first so
+   pages cannot layer their own bar over the shared one. */
+html,
+body {
+  -ms-overflow-style: none !important;
+  scrollbar-color: transparent transparent !important;
+  scrollbar-width: none !important;
+}
+.nav-container {
+  width: var(--panda-visual-viewport-width, 1920px);
+}
+
+body {
+  /* Safari can reserve a 15px root scrollbar gutter even after the scrollbar
+     is visually hidden. Size page layout from the visual viewport so centered
+     content uses the same 1440/1366/etc. canvas as Blink. */
+  width: var(--panda-visual-viewport-width, 1920px);
+}
+/* Do not reserve a native scrollbar gutter. Safari otherwise keeps roughly
+   15px for pages whose source bundle forces overflow-y: scroll, while Blink
+   does not once the native scrollbar is hidden. */
+html {
+  /* `overlay` is the WebKit-compatible no-gutter value. Blink aliases it to
+     auto, while Safari keeps the layout viewport at full width. */
+  overflow-y: overlay !important;
+}
+
+/* Browser UA styles use different default control fonts (notably 11px in
+   Safari versus 13.333px in Blink). Inherit the page typography unless a
+   component deliberately supplies its own font. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.scroll-indicator,
+.page-scroll-indicator,
+.custom-page-scrollbar,
+#panda-global-scroll-indicator {
+  display: none !important;
+}
+#panda-page-scrollbar {
+  position: fixed; top: 0; right: 4px; z-index: 10000; width: 6px; height: 1080px;
+  opacity: 0; pointer-events: none; transition: opacity .16s ease;
+}
+#panda-page-scrollbar.is-scrolling { opacity: 1; }
+.panda-page-scrollbar-thumb {
+  box-sizing: border-box; width: 7px; height: 60px; border-radius: 999px;
+  background: transparent; border: 1px solid rgba(0,0,0,.45); box-shadow: none; will-change: transform;
+}
+html.dark .panda-page-scrollbar-thumb,
+body.is-dark-page .panda-page-scrollbar-thumb {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.5);
+  box-shadow: none;
+}
+
+/* Homepage banner CTAs use the exact same fill interaction as the hero's
+   white primary CTA. Keep their dimensions and placement unchanged. */
+.duo-cta[data-v-17ad66f0] {
+  background-color: #fff !important;
+  background-image: linear-gradient(#0a0a0a, #0a0a0a) !important;
+  background-position: 0 50% !important;
+  background-repeat: no-repeat !important;
+  background-size: 0 100% !important;
+  border: 1px solid #fff !important;
+  box-shadow: none !important;
+  color: #000 !important;
+  outline: none !important;
+  overflow: hidden !important;
+  transform: none !important;
+  transition: background-size .32s cubic-bezier(.65, 0, .35, 1),
+    color .32s cubic-bezier(.65, 0, .35, 1),
+    border-color .32s cubic-bezier(.65, 0, .35, 1) !important;
+}
+.duo-cta[data-v-17ad66f0]:hover,
+.duo-cta[data-v-17ad66f0]:focus-visible,
+.duo-cta[data-v-17ad66f0]:active {
+  background-color: #fff !important;
+  background-size: 100% 100% !important;
+  color: #fff !important;
+  transform: none !important;
+}
+.duo-cta[data-v-17ad66f0] .duo-cta-arrow {
+  color: inherit !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duo-cta[data-v-17ad66f0] { transition-duration: 0s !important; }
+}
+
+/* The third-factor SSR snapshot contains a transient announcement that the
+   hydrated page immediately removes. Never expose that non-page first frame. */
+.ranking-announcement_container[data-v-a01fd99a] {
+  display: none !important;
+}
