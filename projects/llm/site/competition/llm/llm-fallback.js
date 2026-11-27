@@ -1250,7 +1250,7 @@
   window.__arenaNavigate = view => {
     const menu = document.querySelector('.llm-navbar > .menu') || document.querySelector('.llm-wrapper > .menu');
     const items = menu?.querySelectorAll('.menu-item');
-    if (!items?.length) return false;
+    if (!items?.length || portfolioPreview && !showArenaPage) return false;
     const page = view === 'live' ? 0 : view === 'model' ? 2 : 1;
     if (view !== document.documentElement.dataset.portfolioArenaView) {
       if (showArenaPage) {
@@ -1996,6 +1996,9 @@
         if (restoredContainer) {
           restoredContainer.dataset.arenaBooting = 'false';
           restoredContainer.dataset.arenaBootReady = 'true';
+          if (portfolioPreview && parent !== window) {
+            parent.postMessage({type: 'portfolio-arena-ready'}, location.origin);
+          }
         }
         revealAfterCriticalFonts();
       }
