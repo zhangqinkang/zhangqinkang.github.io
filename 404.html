@@ -23,14 +23,6 @@
       mount(html);
       return;
     }
-    const embedded = document.getElementById('pages-entries');
-    if (embedded) {
-      const device = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent) ? 1 : 0;
-      const original = JSON.parse(embedded.textContent)[device];
-      await window.__portfolioTransportReady;
-      setTimeout(() => mount(original), 0);
-      return;
-    }
     if (!navigator.serviceWorker) throw new Error('Service workers unavailable');
     if (document.currentScript?.hasAttribute('data-fallback') &&
         !/^\/(hk(?:\/|$)|en(?:\/|$)|docs(?:\/|$)|agent_quant(?:\/|$)|tqx(?:-|\.|Api))/.test(location.pathname)) {

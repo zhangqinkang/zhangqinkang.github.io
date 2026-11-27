@@ -7,7 +7,7 @@
 <style>html{background:#0a0a0a;color:#fff}body{margin:0}a{color:inherit}</style>
 <script>
 (() => {
-  async function readPortfolioEntry(url, { background = false } = {}) {
+  async function readPortfolioEntry(url) {
   // A response can send its headers and then stop delivering the HTML body.
   // Keep the first attempt while bytes are arriving, and retry a stuck transfer once.
   for (const cache of ['default', 'reload']) {
@@ -23,7 +23,7 @@
       const response = await fetch(url, {
         cache,
         signal: controller.signal,
-        priority: background ? 'low' : 'high',
+        priority: 'high',
       });
       if (!response.ok) throw new Error('Portfolio document unavailable');
       const reader = response.body.getReader();
@@ -44,14 +44,52 @@
       }
       return bytes;
     } catch (error) {
-      if (cache === 'reload' || background) throw error;
+      if (cache === 'reload') throw error;
     } finally {
       clearTimeout(timeout);
     }
   }
 }
 
-  const variants=[{"resources": ["/assets/index-BtTUqiWb-pages-live.js?v=pages-native-4", "/assets/index-D-bYn1Q5.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-desktop.html"}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-mobile.html"}];
+async function racePortfolioBytes(input, mirror, expected) {
+  const primary = new AbortController();
+  const backup = new AbortController();
+  let launchBackup;
+  const headStart = new Promise(resolve => { launchBackup = resolve; });
+  const hedge = setTimeout(launchBackup, 650);
+  const deadline = setTimeout(() => {
+    primary.abort();
+    backup.abort();
+  }, 12000);
+
+  async function verify(url, options, source) {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error('Portfolio resource unavailable');
+    const bytes = await response.arrayBuffer();
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+    const checksum = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
+    if (checksum !== expected) throw new Error('Portfolio resource changed');
+    return { bytes, source };
+  }
+
+  try {
+    const original = verify(input, { signal: primary.signal }, 'origin').catch(error => {
+      launchBackup();
+      throw error;
+    });
+    const alternate = headStart.then(() => verify(mirror, {
+      mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer', signal: backup.signal,
+    }, 'mirror'));
+    return await Promise.any([original, alternate]);
+  } finally {
+    clearTimeout(hedge);
+    clearTimeout(deadline);
+    primary.abort();
+    backup.abort();
+  }
+}
+
+  const variants=[{"resources": ["/assets/index-BtTUqiWb-pages-live.js?v=pages-native-4", "/assets/index-D-bYn1Q5.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/panda-desktop.html", "digest": "8989969943b04272ba03b33f1f513cba6078d9637277b2666e5975bf3ff128d2"}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/panda-mobile.html", "digest": "10b35a1792c540e96aa6ec089b1a22b09e7b5f9ac377cf0e22171b39c993c265"}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
   const serviceWorker=navigator.serviceWorker;
@@ -70,10 +108,11 @@
     workerReady.then(()=>{clearTimeout(timer);resolve();});
   });
   window.__portfolioTransportReady=transportReady;
-  if(selected.path){
-    window.__portfolioEntryDocument=readPortfolioEntry(selected.path).then(bytes=>new TextDecoder().decode(bytes));
-    window.__portfolioEntryDocument.catch(()=>{});
-  }
+  window.__portfolioEntryDocument=racePortfolioBytes(selected.path,selected.mirror,selected.digest)
+    .then(resource=>resource.bytes)
+    .catch(()=>readPortfolioEntry(selected.path))
+    .then(bytes=>new TextDecoder().decode(bytes));
+  window.__portfolioEntryDocument.catch(()=>{});
   for(const url of selected.resources){
     const module=new URL(url,location.href).pathname.endsWith('.js');
     const element=document.createElement('link');
@@ -104,14 +143,6 @@
       delete window.__portfolioEntryDocument;
       const [html] = await Promise.all([entry, window.__portfolioTransportReady]);
       mount(html);
-      return;
-    }
-    const embedded = document.getElementById('pages-entries');
-    if (embedded) {
-      const device = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent) ? 1 : 0;
-      const original = JSON.parse(embedded.textContent)[device];
-      await window.__portfolioTransportReady;
-      setTimeout(() => mount(original), 0);
       return;
     }
     if (!navigator.serviceWorker) throw new Error('Service workers unavailable');
