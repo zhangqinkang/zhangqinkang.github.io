@@ -433,11 +433,43 @@
     </script>
   
 <script type="module">
-import {mountScanFrames} from '/__tqx_sequence_player.js';
 const canvas=document.getElementById('aura-mobile-motion');
-mountScanFrames(canvas,canvas.parentElement,'result',{
- bitmapFrames:true,width:1440,height:810,
- assetRoot:'/projects/tqx/aura/mobile-frames',sequence:{fps:24,count:120},
- visibilityElement:canvas.parentElement,owner:'tqx-aura-mobile'
-}).catch(error=>console.warn('[TQX] reference frames unavailable',error));
+const template=canvas.parentElement;
+let usingFrames=false;
+const fallback=async()=>{
+  if(usingFrames)return;
+  usingFrames=true;
+  video.remove();
+  canvas.hidden=false;
+  canvas.style.display='block';
+  try{
+    const {mountScanFrames}=await import('/__tqx_sequence_player.js');
+    await mountScanFrames(canvas,template,'result',{
+      bitmapFrames:true,width:1440,height:810,
+      assetRoot:'/projects/tqx/aura/mobile-frames',sequence:{fps:24,count:120},
+      visibilityElement:template,owner:'tqx-aura-mobile'
+    });
+  }catch(error){console.warn('[TQX] reference frames unavailable',error)}
+};
+const video=document.createElement('video');
+if(video.canPlayType('video/webm; codecs="vp8"')){
+  video.muted=true;
+  video.defaultMuted=true;
+  video.playsInline=true;
+  video.loop=true;
+  video.autoplay=true;
+  video.preload='auto';
+  video.setAttribute('aria-hidden','true');
+  video.style.cssText=canvas.style.cssText;
+  video.poster='/projects/tqx/aura/mobile-frames/00000.webp';
+  video.addEventListener('error',fallback,{once:true});
+  canvas.style.display='none';
+  template.insertBefore(video,canvas);
+  let warmURL;
+  try{warmURL=top.__portfolioTqxAuraURL}catch{}
+  video.src=warmURL||'/projects/tqx/aura/mobile-motion.webm';
+  video.play().catch(error=>{
+    if(error.name==='NotAllowedError'||error.name==='NotSupportedError')fallback();
+  });
+}else fallback();
 </script></body></html>

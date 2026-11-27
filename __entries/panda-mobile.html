@@ -37,7 +37,12 @@
     <link rel="modulepreload" crossorigin href="/assets/src-4DghefQ5.js">
     <link rel="stylesheet" crossorigin href="/assets/src-_UQREVRZ.css">
     <link rel="stylesheet" crossorigin href="/assets/index-CJiVI02r.css">
-  <link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/v3/v3-desktop-first-screen.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/v3/v3-mobile-first-screen.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/phone-images/befb23d63a1f19.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/phone-images/9d5cffdab147ce.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/phone-images/e0339b062d0980.webp"><link rel="preload" as="image" fetchpriority="low" href="/project-mockups/pandaai-phone-hardware-v3.png"></head>
+  <link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/v3/v3-desktop-first-screen.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/v3/v3-mobile-first-screen.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/phone-images/befb23d63a1f19.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/phone-images/9d5cffdab147ce.webp"><link rel="preload" as="image" fetchpriority="low" href="/projects/pandaai/phone-images/e0339b062d0980.webp"><link rel="preload" as="image" fetchpriority="low" href="/project-mockups/pandaai-phone-hardware-v3.png"><script type="module">
+const warm=()=>import('/reference-sites/foreword-frames/player.js?v=20261013-53')
+  .then(({warmPack})=>Promise.allSettled([warmPack('motion'),warmPack('electric')])).catch(()=>{});
+if(window.requestIdleCallback)requestIdleCallback(warm,{timeout:1200});
+else setTimeout(warm,350);
+</script></head>
   <body>
     <div id="root"></div>
   </body>
