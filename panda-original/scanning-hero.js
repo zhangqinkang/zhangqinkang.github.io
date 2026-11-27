@@ -24,7 +24,7 @@ const loadTexture = (loader, url) => new Promise((resolve, reject) => {
 })
 const scanLibrary = {THREE, abs, blendScreen, float, mod, mix, add, mx_cell_noise_float, oneMinus, pass, smoothstep, texture, uniform, uv, vec2, vec3, bloom}
 
-export async function mountScanningHero(canvas, root, colorUrl, depthUrl, options = {}) {
+async function mountNativeScanningHero(canvas, root, colorUrl, depthUrl, options = {}) {
   let disposed = false
   // Phone proof cards use the same node material and post-processing through
   // WebGL2. Android can expose WebGPU while its adapter cannot render this
@@ -441,4 +441,105 @@ export async function mountScanningHero(canvas, root, colorUrl, depthUrl, option
   canvas.__pandaDispose = dispose
   if (phoneProof) window.addEventListener('pagehide', onPageHide)
   return dispose
+}
+
+function mountHomeCoverScan(canvas, root, colorUrl, depthUrl, options, mountNative) {
+  if (location.pathname !== '/' || window !== top || !options.fitCover ||
+      options.original21st || options.overlayOnly ||
+      !matchMedia('(max-width:820px)').matches ||
+      !navigator.userAgentData?.brands?.some(({brand}) => brand === 'Chromium') ||
+      !window.Worker || !canvas.transferControlToOffscreen) return null;
+
+  const display = canvas.cloneNode(false);
+  display.style.opacity = '0';
+  let worker, surface;
+  try {
+    worker = new Worker(new URL('./pages-cover-worker.js', import.meta.url), {type:'module'});
+    surface = display.transferControlToOffscreen();
+  } catch {
+    worker?.terminate();
+    return null;
+  }
+
+  let visible = false, ready = false, stopped = false, usingWorker = true, timer;
+  let targetX = 0, targetY = 0;
+  let native = Promise.resolve(undefined);
+  let stateKey = '';
+  const send = () => {
+    const width = root.clientWidth;
+    const height = root.clientHeight;
+    if (!usingWorker || stopped || !width || !height) return;
+    const displayedRatio = root.getBoundingClientRect().width / width || 1;
+    const visiblePixels = Math.max(.5, displayedRatio * devicePixelRatio);
+    const ratio = Math.min(visiblePixels, 1.25, options.maxPixelRatio ?? 2);
+    const key = `${width}:${height}:${ratio}:${visible}:${targetX}:${targetY}`;
+    if (stateKey === key) return;
+    stateKey = key;
+    worker.postMessage({type:'state', width, height, ratio, visible, targetX, targetY});
+  };
+  const resize = new ResizeObserver(send);
+  const observe = new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    clearTimeout(timer);
+    if (visible && !ready) timer = setTimeout(fallback, 5000);
+    send();
+  });
+  const move = event => {
+    if (!visible) return;
+    const rect = root.getBoundingClientRect();
+    targetX = (event.clientX - rect.left) / rect.width * 2 - 1;
+    targetY = -((event.clientY - rect.top) / rect.height * 2 - 1);
+    send();
+  };
+  const retireWorker = () => {
+    if (!usingWorker) return;
+    usingWorker = false;
+    clearTimeout(timer);
+    resize.disconnect();
+    observe.disconnect();
+    removeEventListener('pointermove', move);
+    worker.terminate();
+    display.remove();
+  };
+  const dispose = async () => {
+    if (stopped) return;
+    stopped = true;
+    retireWorker();
+    removeEventListener('pagehide', hide);
+    const cleanup = await native;
+    await cleanup?.();
+  };
+  const hide = event => { if (!event.persisted) void dispose(); };
+  const fallback = () => {
+    if (stopped || !usingWorker) return;
+    retireWorker();
+    if (canvas.isConnected) {
+      native = mountNative(canvas, root, colorUrl, depthUrl, options).catch(() => undefined);
+    }
+  };
+
+  worker.addEventListener('error', event => {
+    event.preventDefault();
+    fallback();
+  });
+  worker.addEventListener('message', ({data}) => {
+    if (data.type === 'error') fallback();
+    if (stopped || data.type !== 'ready') return;
+    ready = true;
+    clearTimeout(timer);
+    display.dataset.scanDisplayMode = 'worker';
+    display.style.opacity = '1';
+  });
+  canvas.after(display);
+  worker.postMessage({type:'start', canvas:surface, colorUrl, depthUrl, options}, [surface]);
+  observe.observe(root);
+  resize.observe(root);
+  if (!options.lockPosition) addEventListener('pointermove', move, {passive:true});
+  addEventListener('pagehide', hide);
+  return dispose;
+}
+
+export async function mountScanningHero(canvas, root, colorUrl, depthUrl, options = {}) {
+  return mountHomeCoverScan(canvas, root, colorUrl, depthUrl, options, mountNativeScanningHero)
+    ?? mountNativeScanningHero(canvas, root, colorUrl, depthUrl, options);
 }
