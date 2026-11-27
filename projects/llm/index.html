@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#0a0a0a">
 <title>张勤康 · 作品集</title>
 <style>html{background:#0a0a0a;color:#fff}body{margin:0}a{color:inherit}</style>
-<script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script>
 (() => {
   async function readPortfolioEntry(url) {
   // A response can send its headers and then stop delivering the HTML body.
@@ -109,7 +109,15 @@ async function racePortfolioBytes(input, mirror, expected) {
   });
   window.__portfolioTransportReady=transportReady;
   window.__portfolioEntryDocument=racePortfolioBytes(selected.path,selected.mirror,selected.digest)
-    .then(resource=>resource.bytes)
+    .then(({bytes})=>{
+      if(window.caches){
+        const key=new URL(selected.path,location.origin);
+        key.searchParams.set('entry-v',selected.digest.slice(0,16));
+        const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
+        caches.open("portfolio-original-entries-8a7811805cfa810b").then(cache=>cache.put(key,original)).catch(()=>{});
+      }
+      return bytes;
+    })
     .catch(()=>readPortfolioEntry(selected.path))
     .then(bytes=>new TextDecoder().decode(bytes));
   window.__portfolioEntryDocument.catch(()=>{});
