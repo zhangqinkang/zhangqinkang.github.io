@@ -27,6 +27,40 @@
 </script><script>(() => {
   const positionKey = 'portfolioGitHubCardPosition';
   const fromHistory = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
+  const projects = { pandaai: 'panda', tqx: 'tqx', llm: 'llm', taskboard: 'taskboard' };
+  const warmed = new Set();
+
+  function warmProject(card) {
+    const link = card.querySelector('a[href]');
+    const project = link?.origin === location.origin && Object.hasOwn(projects, link.pathname.split('/')[2])
+      ? projects[link.pathname.split('/')[2]] : null;
+    if (!project || warmed.has(project) || !navigator.serviceWorker || navigator.connection?.saveData) return;
+    warmed.add(project);
+    const mobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
+    const entry = project === 'tqx' ? project : project + (mobile ? '-mobile' : '-desktop');
+    navigator.serviceWorker.ready.then(registration => {
+      registration.active?.postMessage({ type: 'warm-project-entry', entry });
+    }).catch(() => {});
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const visible = new IntersectionObserver(entries => {
+      for (const { target, intersectionRatio } of entries) {
+        if (intersectionRatio < .2) continue;
+        visible.unobserve(target);
+        warmProject(target);
+      }
+    }, { threshold: .2 });
+    const attach = () => {
+      const cards = document.querySelectorAll('.jack-showcase-card');
+      if (!cards.length) return false;
+      cards.forEach(card => visible.observe(card));
+      return true;
+    };
+    if (attach()) return;
+    const rendered = new MutationObserver(() => { if (attach()) rendered.disconnect(); });
+    rendered.observe(document.getElementById('root'), { childList: true });
+  }, { once: true });
 
   if (fromHistory && Number.isFinite(history.state?.[positionKey])) {
     try {

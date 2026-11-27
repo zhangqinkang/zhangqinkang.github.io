@@ -7,18 +7,55 @@
 <style>html{background:#0a0a0a;color:#fff}body{margin:0}a{color:inherit}</style>
 <script>
 (() => {
+  async function readPortfolioEntry(url, { background = false } = {}) {
+  // A response can send its headers and then stop delivering the HTML body.
+  // Keep the first attempt while bytes are arriving, and retry a stuck transfer once.
+  for (const cache of ['default', 'reload']) {
+    const controller = new AbortController();
+    let timeout;
+    const arm = delay => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => controller.abort(), delay);
+    };
+
+    try {
+      arm(cache === 'reload' ? 10000 : 4500);
+      const response = await fetch(url, {
+        cache,
+        signal: controller.signal,
+        priority: background ? 'low' : 'high',
+      });
+      if (!response.ok) throw new Error('Portfolio document unavailable');
+      const reader = response.body.getReader();
+      const chunks = [];
+      let length = 0;
+      while (true) {
+        arm(cache === 'reload' ? 6500 : 3500);
+        const next = await reader.read();
+        if (next.done) break;
+        chunks.push(next.value);
+        length += next.value.byteLength;
+      }
+      const bytes = new Uint8Array(length);
+      let position = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, position);
+        position += chunk.byteLength;
+      }
+      return bytes;
+    } catch (error) {
+      if (cache === 'reload' || background) throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+}
+
   const variants=[{"resources": ["/assets/index-BtTUqiWb-pages-live.js?v=pages-native-4", "/assets/index-D-bYn1Q5.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-desktop.html"}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-mobile.html"}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
-  const entry=async()=>{
-    const first=await fetch(selected.path).catch(()=>null);
-    if(first?.ok)return first.text();
-    const retry=await fetch(selected.path,{cache:'reload'});
-    if(!retry.ok)throw new Error('Portfolio document unavailable');
-    return retry.text();
-  };
   if(selected.path){
-    window.__portfolioEntryDocument=entry();
+    window.__portfolioEntryDocument=readPortfolioEntry(selected.path).then(bytes=>new TextDecoder().decode(bytes));
     window.__portfolioEntryDocument.catch(()=>{});
   }
   for(const url of selected.resources){
