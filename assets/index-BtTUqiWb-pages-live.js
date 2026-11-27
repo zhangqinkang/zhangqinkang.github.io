@@ -240,6 +240,11 @@ body{font-family:Arial,sans-serif!important}`:``);let m=new CSSStyleSheet;m.repl
   const near=new IntersectionObserver(([entry])=>{
     if(!entry.isIntersecting)return;
     near.disconnect();
+    const embedded=document.getElementById('portfolio-motion-reference');
+    if(embedded){
+      setMotionDoc(JSON.parse(embedded.textContent));
+      return;
+    }
     const timer=setTimeout(()=>controller.abort(),8000);
     fetch(g,{signal:controller.signal}).then(response=>{
       if(!response.ok)throw Error(`Reference HTTP ${response.status}`);
