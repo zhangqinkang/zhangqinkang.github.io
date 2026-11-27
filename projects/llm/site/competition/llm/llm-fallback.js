@@ -1860,7 +1860,16 @@
   };
   const yieldPreviewFrame = () => {
     if (!portfolioPreview) return;
-    return globalThis.scheduler?.yield?.() ?? new Promise(resolve => setTimeout(resolve, 0));
+    return new Promise(resolve => {
+      const deadline = setTimeout(() => {
+        cancelAnimationFrame(frame);
+        resolve();
+      }, 80);
+      const frame = requestAnimationFrame(() => {
+        clearTimeout(deadline);
+        setTimeout(resolve, 0);
+      });
+    });
   };
   const boot = () => {
     void mountArena().catch(error => {
