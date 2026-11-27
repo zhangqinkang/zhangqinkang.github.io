@@ -260,6 +260,24 @@ const revealSourcePage = async () => {
 }
 void revealSourcePage()
 
+// The V3 showcase can scroll the authored server-rendered document before
+// Vue starts. Reveal its existing sections as each enters the viewport.
+try {
+  if (window.frameElement?.matches('.panda-v3-live-frame') && top.__portfolioPandaHydrate) {
+    const reveal = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.add('is-inview', 'is-active', 'vue-mounted');
+        reveal.unobserve(entry.target);
+      }
+    }, { rootMargin: '15% 0px' });
+    document.querySelectorAll('.section, .tpl-section, .comm-section, .persona-head, .loop-section, .curved-loop-jacket')
+      .forEach(element => reveal.observe(element));
+    window.addEventListener('pagehide', () => reveal.disconnect(), { once: true });
+  }
+} catch {}
+
+
 const signalReady = canvas => {
   const post = async () => {
     const heroImage = document.querySelector('.hero-bg, .scanning-hero img')
@@ -302,6 +320,10 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   root.append(canvas)
 
   try {
+    if(window.frameElement?.matches('.panda-v3-live-frame')){
+      await top.__portfolioPandaHydrate?.(window.frameElement);
+    }
+    if(root.isConnected){
     if (phoneProof && proof === 'hero') {
       const { mountScanFrames } = await import('/panda-original/scan-frame-player.js')
       await mountScanFrames(canvas, root, 'result')
@@ -331,6 +353,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     }
     root.classList.add('is-embedded-scan-ready')
     signalReady(canvas)
+    }
   } catch (error) {
     console.error('[PandaAI embed] 原站扫描动效初始化失败。', error)
     window.__portfolioMotionError = String(error)
