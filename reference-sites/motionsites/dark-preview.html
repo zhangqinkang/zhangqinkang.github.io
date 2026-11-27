@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-  <head>
+  <head><base href="/reference-sites/motionsites/">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MotionSites dark reference preview</title>
@@ -26,17 +26,17 @@
         clearInterval(readyTimer);
         useDarkReference(); startSmoothScroll();
         window.__portfolioReferenceReady = true;
-        parent.postMessage({type:'portfolio-reference-ready'}, location.origin);
+        parent.postMessage({type:'portfolio-reference-ready'}, new URL(document.baseURI).origin);
       }, 100);
       window.addEventListener('message', event => {
-        if (event.source === frame.contentWindow && event.origin === location.origin && event.data?.type === 'portfolio-motion-reference-ready') {
+        if (event.source === frame.contentWindow && event.origin === new URL(document.baseURI).origin && event.data?.type === 'portfolio-motion-reference-ready') {
           useDarkReference();
           startSmoothScroll();
-          parent.postMessage({ type: 'portfolio-reference-ready' }, location.origin);
+          parent.postMessage({ type: 'portfolio-reference-ready' }, new URL(document.baseURI).origin);
         }
-        if (event.source === parent && event.origin === location.origin && event.data?.type === 'portfolio-scroll-state') {
+        if (event.source === parent && event.origin === new URL(document.baseURI).origin && event.data?.type === 'portfolio-scroll-state') {
           pageScrolling = Boolean(event.data.active);
-          if (!phoneReference) frame.contentWindow?.postMessage(event.data, location.origin);
+          if (!phoneReference) frame.contentWindow?.postMessage(event.data, new URL(document.baseURI).origin);
         }
       });
       function useDarkReference() {
