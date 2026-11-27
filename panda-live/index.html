@@ -21,6 +21,7 @@
     } else {
       link.rel = 'preload';
       link.as = filename.endsWith('.css') ? 'style' : 'image';
+      if (link.as === 'image') link.fetchPriority = 'low';
     }
     document.head.appendChild(link);
   }
