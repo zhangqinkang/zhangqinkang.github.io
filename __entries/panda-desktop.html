@@ -1,6 +1,30 @@
 <!doctype html>
 <html lang="zh-CN" translate="no" class="notranslate">
-  <head>
+  <head><script>
+(() => {
+  const serviceWorker=navigator.serviceWorker;
+  if(!serviceWorker||serviceWorker.controller)return;
+  const failed=new Set();
+  const remember=event=>{
+    const media=event.target;
+    if(media instanceof HTMLImageElement&&media.src.startsWith(location.origin+'/'))failed.add(media);
+  };
+  window.addEventListener('error',remember,true);
+  serviceWorker.addEventListener('controllerchange',()=>{
+    window.removeEventListener('error',remember,true);
+    for(const image of failed){
+      if(!image.isConnected)continue;
+      const current=new URL(image.currentSrc||image.src);
+      current.searchParams.set('portfolio-asset-retry','1');
+      image.src=current.href;
+    }
+    failed.clear();
+  },{once:true});
+  serviceWorker.register('/_pages-worker.js',{scope:'/'}).catch(()=>{
+    window.removeEventListener('error',remember,true);
+  });
+})();
+</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0a0a" />
@@ -14,19 +38,13 @@
 (() => {
   const paths=["/reference-sites/motionsites/loop-video/8d8791b3d761742d5c-400.mp4", "/reference-sites/motionsites/loop-video/476e98763a4a990f9f-400.mp4", "/reference-sites/motionsites/loop-video/42acda8c9c9660515e-400.mp4"];
   const clips=new Map();
-  window.__portfolioReferenceClip=path=>{
-    if(!paths.includes(path))return;
-    if(!clips.has(path)){
-      const download=fetch(path,{cache:'force-cache',priority:'low'})
-        .then(response=>response.ok?response.blob():null)
-        .then(blob=>blob?.size?URL.createObjectURL(blob):null)
-        .catch(()=>null);
-      clips.set(path,download);
-    }
-    return clips.get(path);
-  };
+  window.__portfolioReferenceClip=path=>clips.get(path);
+  const download=path=>fetch(path,{cache:'force-cache',priority:'low'})
+    .then(response=>response.ok?response.blob():null)
+    .then(blob=>{if(blob?.size)clips.set(path,URL.createObjectURL(blob))})
+    .catch(()=>null);
   addEventListener('DOMContentLoaded',()=>{
-    const warm=()=>paths.forEach(window.__portfolioReferenceClip);
+    const warm=()=>paths.forEach(download);
     if(window.requestIdleCallback)requestIdleCallback(warm,{timeout:1000});
     else setTimeout(warm,200);
   },{once:true});

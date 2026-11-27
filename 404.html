@@ -26,6 +26,19 @@
     document.head.appendChild(link);
   }
 
+  function mount(html) {
+    document.open();
+    document.write(html);
+    document.close();
+  }
+
+  if (selected) {
+    // Local modules, styles, and covers can render without waiting for the
+    // service worker. The real entry registers it in parallel for linked media.
+    setTimeout(() => mount(selected.html), 0);
+    return;
+  }
+
   try {
     if (!navigator.serviceWorker) throw new Error('Service workers unavailable');
     if (document.currentScript?.hasAttribute('data-fallback') &&
@@ -40,15 +53,11 @@
         if (navigator.serviceWorker.controller) resolve();
       });
     }
-    // The original document is already in this response. Mount it at the
-    // existing route as soon as resource routing is ready, without a reload.
-    const html = selected?.html || await fetch(location.href).then(response => {
+    const html = await fetch(location.href).then(response => {
       if (!response.ok) throw new Error('Entry request failed');
       return response.text();
     });
-    document.open();
-    document.write(html);
-    document.close();
+    mount(html);
   } catch {
     const link = document.createElement('a');
     link.href = 'https://e1fc82ea.zhangqinkang.pages.dev' + location.pathname + location.search + location.hash;

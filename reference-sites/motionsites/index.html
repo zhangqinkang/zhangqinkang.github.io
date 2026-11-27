@@ -18,19 +18,10 @@
    return scale;
  };
  const selectSource=v=>{const a=variants[v.dataset.loop],r=v.getBoundingClientRect(),scale=displayScale();const pixels=Math.max(r.width,r.height*a.width/a.height)*scale*(devicePixelRatio||1);const src=pixels<=a.smallWidth?a.smallVideo:a.video;if(v.dataset.selectedClip===src)return;
- const firstSelection=!v.dataset.selectedClip;
  v.dataset.selectedClip=src;
  let getClip;
  try{getClip=window.top.__portfolioReferenceClip}catch{}
- const buffered=getClip?.(src);
- if(!buffered){v.src=src;return}
- if(firstSelection)v.removeAttribute('src');
- buffered.then(url=>{
-   if(v.dataset.selectedClip!==src)return;
-   v.src=url||src;
- }).catch(()=>{
-   if(v.dataset.selectedClip===src)v.src=src;
- })};
+ v.src=getClip?.(src)||src};
  videos.forEach(selectSource);addEventListener('resize',()=>videos.forEach(selectSource));
  let travel=900,last=performance.now(),ready=false;
  const outerVisible=()=>{const frame=window.frameElement;if(!frame)return true;const r=frame.getBoundingClientRect();return r.bottom>0&&r.top<parent.innerHeight};
