@@ -1906,8 +1906,43 @@
     ];
     Promise.allSettled(criticalFonts).catch(() => {});
   };
+  const createPreviewQueue = host => {
+    const pending = [];
+    let scheduled = false;
+    const hidden = frame => frame.closest('.match-frame-layer')?.classList.contains('is-hidden');
+    const schedule = () => {
+      if (scheduled || !pending.length) return;
+      scheduled = true;
+      const run = () => {
+        scheduled = false;
+        const active = pending.findIndex(item => item.frame.isConnected && !hidden(item.frame));
+        const next = pending.splice(Math.max(active, 0), 1)[0];
+        next.resolve();
+        schedule();
+      };
+      const animation = host.requestAnimationFrame(() => {
+        host.clearTimeout(deadline);
+        host.setTimeout(run, 0);
+      });
+      const deadline = host.setTimeout(() => {
+        host.cancelAnimationFrame(animation);
+        run();
+      }, 80);
+    };
+    return frame => new Promise(resolve => {
+      pending.push({frame, resolve});
+      schedule();
+    });
+  };
   const yieldPreviewFrame = () => {
     if (!portfolioPreview) return;
+    try {
+      if (window.frameElement && window.top !== window) {
+        const host = window.top;
+        host.__portfolioArenaBootQueue ||= createPreviewQueue(host);
+        return host.__portfolioArenaBootQueue(window.frameElement);
+      }
+    } catch {}
     return new Promise(resolve => {
       const deadline = setTimeout(() => {
         cancelAnimationFrame(frame);
@@ -1932,6 +1967,7 @@
     if (container) container.dataset.arenaBooting = 'true';
     const params = new URLSearchParams(location.search);
     const page = Math.max(0, Math.min(2, Number(params.get('page') || 0)));
+    await yieldPreviewFrame();
     installReturnLogic(); installSourceLogo(); installMarketLeader();
     await yieldPreviewFrame();
     installChart();

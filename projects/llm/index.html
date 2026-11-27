@@ -165,7 +165,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   }
 }
 
-  const variants=[{"resources": ["/assets/index-C_YUaifs.js?v=pages-edge-2", "/assets/index-aRib4OP-.css"], "path": "/__entries/llm-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/llm-desktop.html", "digest": "644b8f07aa3d2bad1ffd28dbdb7932e5938b2a0857412632cd8f702d1bbbee23"}, {"resources": ["/assets/city-boot-B_pVCvK7.js", "/assets/llm-DXWFBEq6.js", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css"], "path": "/__entries/llm-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/llm-mobile.html", "digest": "1b2a8e322a730b4de314363ee3ce309c6155945333efb86bc6d152258efd2679"}];
+  const variants=[{"resources": ["/assets/index-C_YUaifs.js?v=pages-edge-2", "/assets/index-aRib4OP-.css"], "path": "/__entries/llm-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/llm-desktop.html", "digest": "6560825de0585ed3e29d28bd6d6f3fabbefe6d31fe0fe4d0b16d267513789ea2"}, {"resources": ["/assets/city-boot-B_pVCvK7.js", "/assets/llm-DXWFBEq6.js", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css"], "path": "/__entries/llm-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/llm-mobile.html", "digest": "8c77f5c6358360c9546edf2652053cb7d677d0f7227cc849c3302c564382bcad"}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
   const serviceWorker=navigator.serviceWorker;
@@ -190,7 +190,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
         const key=new URL(selected.path,location.origin);
         key.searchParams.set('entry-v',selected.digest.slice(0,16));
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
-        caches.open("portfolio-original-entries-12491802a979836c").then(cache=>cache.put(key,original)).catch(()=>{});
+        caches.open("portfolio-original-entries-afe670925968d950").then(cache=>cache.put(key,original)).catch(()=>{});
       }
       return bytes;
     })

@@ -165,7 +165,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   }
 }
 
-  const variants=[{"resources": ["/assets/index-BtTUqiWb-pages-live.js?v=pages-native-6", "/assets/index-D-bYn1Q5.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/panda-desktop.html", "digest": "5ce9f2f014c46df9878aeba9f960405a8b550fcef11e99b390dddcbfe6807ab2", "pack": {"path": "/__startup-packs/5ce9f2f014c46df9878aeba9/", "parts": 9}}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/panda-mobile.html", "digest": "10b35a1792c540e96aa6ec089b1a22b09e7b5f9ac377cf0e22171b39c993c265", "pack": {"path": "/__startup-packs/10b35a1792c540e96aa6ec08/", "parts": 3}}];
+  const variants=[{"resources": ["/assets/index-BtTUqiWb-pages-live.js?v=pages-native-6", "/assets/index-D-bYn1Q5.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/panda-desktop.html", "digest": "0cf5d4a9ef1f42050d9eb891c43f8c790de977399ca8ab0e19a5fc24c82c4d83", "pack": {"path": "/__startup-packs/0cf5d4a9ef1f42050d9eb891/", "parts": 6}}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/panda-mobile.html", "digest": "34283e9b513a61b12dd3d270f9d8c5fe80d524ec79e645319bf6d5f8ada86156"}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
   const serviceWorker=navigator.serviceWorker;
@@ -190,7 +190,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
         const key=new URL(selected.path,location.origin);
         key.searchParams.set('entry-v',selected.digest.slice(0,16));
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
-        caches.open("portfolio-original-entries-12491802a979836c").then(cache=>cache.put(key,original)).catch(()=>{});
+        caches.open("portfolio-original-entries-afe670925968d950").then(cache=>cache.put(key,original)).catch(()=>{});
       }
       return bytes;
     })
