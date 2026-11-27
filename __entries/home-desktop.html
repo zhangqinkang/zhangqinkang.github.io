@@ -24,7 +24,107 @@
     window.removeEventListener('error',remember,true);
   });
 })();
-</script>
+</script><style>#portfolio-opening {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 100000;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #080809;
+  color: #fff;
+  font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+#portfolio-opening * { box-sizing: border-box; }
+#portfolio-opening .opening-nav {
+  position: relative;
+  z-index: 2;
+  height: 64px;
+  padding: 0 3.4vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ffffff0e;
+  background: #080809;
+  color: #e4e4e7;
+  font-size: 13px;
+}
+#portfolio-opening .opening-nav a { color: inherit; text-decoration: none; }
+#portfolio-opening .opening-nav a:focus-visible, #portfolio-opening .opening-action:focus-visible { outline: 2px solid #94b9ff; outline-offset: 4px; }
+#portfolio-opening .opening-main {
+  min-height: calc(100svh - 64px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  padding: 32px 20px 74px;
+  text-align: center;
+}
+#portfolio-opening h1, #portfolio-opening p { margin: 0; }
+#portfolio-opening .opening-home-nav { justify-content: center; font-weight: 650; }
+#portfolio-opening .opening-home-main {
+  background: radial-gradient(ellipse at 47% 65%, #1b1e254c, transparent 32%);
+  gap: clamp(12px, 3vh, 24px);
+}
+#portfolio-opening .opening-home-title {
+  font-size: clamp(2.4rem, 5.15vw, 4.625rem);
+  line-height: 1.04;
+  font-weight: 650;
+  letter-spacing: -.045em;
+}
+#portfolio-opening .opening-home-title span { display: block; }
+#portfolio-opening .opening-mobile-title { display: none !important; }
+#portfolio-opening .opening-muted { color: #77777d; }
+#portfolio-opening .opening-home-intro { max-width: 40rem; color: #a1a1aa; font-size: 14px; letter-spacing: .05em; }
+#portfolio-opening .opening-kicker { color: #86acd9; letter-spacing: .1em; font-size: 11px; }
+#portfolio-opening .opening-action {
+  display: inline-block;
+  padding: 9px 22px;
+  color: #e4e4e7;
+  border: 1px solid #ffffff40;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 13px;
+}
+#portfolio-opening .opening-panda-main { justify-items: start; text-align: left; justify-content: start; padding-inline: 8vw; }
+#portfolio-opening .opening-panda-main h1 { font-size: clamp(3rem, 9vw, 8rem); line-height: 1.05; }
+#portfolio-opening .opening-panda-main p { color: #bbbcc9; }
+#portfolio-opening .opening-panda-art { position: absolute; z-index: -1; right: 0; bottom: 2%; width: 66%; max-height: 84%; object-fit: contain; object-position: bottom right; }
+#portfolio-opening .opening-tqx-main h1 { font-size: clamp(3.5rem, 10vw, 7rem); line-height: .95; letter-spacing: -.08em; font-weight: 500; }
+#portfolio-opening .opening-tqx-main { gap: 12px; }
+#portfolio-opening .opening-tqx-film { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; opacity: .78; }
+@media (prefers-reduced-motion: reduce) { #portfolio-opening .opening-tqx-film { display: none; } }
+#portfolio-opening .opening-llm-main { gap: 15px; background: #121213; }
+#portfolio-opening .opening-llm-main h1 { font-size: clamp(1.5rem, 3.4vw, 3.1rem); }
+#portfolio-opening .opening-taskboard-main { display: block; padding: 0 2vw; background: #101014; }
+#portfolio-opening .opening-taskboard-main img { display: block; width: 100%; height: auto; }
+#portfolio-opening .opening-taskboard-main h1 { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; }
+#portfolio-opening .opening-project-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: 12px;
+  padding: 32px clamp(20px, 6vw, 92px) 64px;
+}
+#portfolio-opening .opening-project-links a {
+  padding: 24px;
+  border: 1px solid #ffffff22;
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none;
+  background: #151518;
+}
+@media (max-width: 700px) {
+  #portfolio-opening .opening-nav { height: 52px; padding-inline: 16px; }
+  #portfolio-opening .opening-main { min-height: calc(100svh - 52px); }
+  #portfolio-opening .opening-desktop-title { display: none !important; }
+  #portfolio-opening .opening-mobile-title { display: block !important; }
+  #portfolio-opening .opening-home-main { padding-inline: 14px; }
+  #portfolio-opening .opening-panda-main { align-content: start; padding-top: 20svh; }
+  #portfolio-opening .opening-panda-art { width: 96%; }
+  #portfolio-opening .opening-taskboard-main { padding-inline: 10px; }
+}
+</style>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0a0a" />
@@ -146,6 +246,73 @@
 })();
 </script></head>
   <body>
-    <div id="root"></div>
-  </body>
+    <div id="portfolio-opening" data-live-hero="#home h1">
+  <nav class="opening-nav opening-home-nav"><a href="/">ZHANGQINKANG DESIGN</a></nav>
+  <main class="opening-main opening-home-main">
+    <p class="opening-kicker">SENIOR DESIGNER · TECH EXPLORER</p>
+    <h1 class="opening-home-title" aria-label="Vibe Coding Design+Code in One Workflow.">
+      <span class="opening-desktop-title">Vibe Coding Design+</span>
+      <span class="opening-desktop-title opening-muted">Code in One Workflow.</span>
+      <span class="opening-mobile-title">Vibe Coding</span>
+      <span class="opening-mobile-title">Design+Code</span>
+      <span class="opening-mobile-title opening-muted">in One</span>
+      <span class="opening-mobile-title opening-muted">Workflow.</span>
+    </h1>
+    <p class="opening-home-intro">此作品集为AI工业革命应运而生的设计+编程代码一体化项目，一个人从设计图到编程代码落地上线。代替了传统UI+编程岗位，使工作效率更高，能节省公司沟通、人员、预算成本等。优胜略汰为互联网生存法则，新技术替代老技术为大势所趋。</p>
+    <a class="opening-action" href="#opening-projects" data-live-target="#jack-showcase">滚动探索</a>
+  </main>
+  <nav id="opening-projects" class="opening-project-links" aria-label="作品项目">
+    <a href="/projects/pandaai/">PandaAI</a>
+    <a href="/projects/tqx/">TQX</a>
+    <a href="/projects/llm/">全球AI交易大赛</a>
+    <a href="/projects/taskboard/">Task Board</a>
+  </nav>
+</div><div id="root"></div>
+  <script>(() => {
+  const opening = document.getElementById('portfolio-opening');
+  const root = document.getElementById('root');
+  if (!opening || !root) return;
+
+  let firstMount = 0;
+  let frame = 0;
+  const reveal = () => {
+    observer.disconnect();
+    cancelAnimationFrame(frame);
+    opening.remove();
+    const targetId = window.__portfolioOpeningTarget?.slice(1);
+    delete window.__portfolioOpeningTarget;
+    if (!targetId) return;
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    if (location.hash === '#opening-projects') history.replaceState(history.state, '', '#' + targetId);
+    const top = target.getBoundingClientRect().top + scrollY;
+    if (window.__portfolioScrollTo) window.__portfolioScrollTo(top);
+    else target.scrollIntoView({ block: 'start' });
+  };
+  const inspect = now => {
+    if (!root.firstElementChild) return;
+    if (!firstMount) firstMount = now;
+    const hero = root.querySelector(opening.dataset.liveHero);
+    const style = hero && getComputedStyle(hero);
+    const visible = style?.visibility === 'visible' && Number(style.opacity) >= .8
+      && hero.getBoundingClientRect().height > 0
+      && (!(hero instanceof HTMLImageElement) || hero.complete && hero.naturalWidth > 0);
+    if (visible || now - firstMount > 1800) {
+      requestAnimationFrame(reveal);
+      return;
+    }
+    frame = requestAnimationFrame(inspect);
+  };
+  const observer = new MutationObserver(() => {
+    if (frame || !root.firstElementChild) return;
+    frame = requestAnimationFrame(inspect);
+  });
+  opening.addEventListener('click', event => {
+    const link = event.target.closest('a[href^="#"]');
+    if (link) window.__portfolioOpeningTarget = link.dataset.liveTarget || link.hash;
+  });
+  observer.observe(root, { childList: true });
+  if (root.firstElementChild) frame = requestAnimationFrame(inspect);
+})();
+</script></body>
 </html>
