@@ -1830,9 +1830,16 @@
       let queued = false;
       new MutationObserver(mutations => {
         if (queued) return;
+        const newContent = mutations.filter(mutation => {
+          const target = mutation.target.nodeType === Node.ELEMENT_NODE ? mutation.target : mutation.target.parentElement;
+          // Existing chart prices were normalized at startup. Their numeric
+          // updates don't need another computed-style read on every frame.
+          return !target?.closest('.arena-model-marker .price');
+        });
+        if (!newContent.length) return;
         queued = true;
         requestAnimationFrame(() => {
-          mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+          newContent.forEach(mutation => mutation.addedNodes.forEach(node => {
             if (node.nodeType === Node.ELEMENT_NODE) apply(node);
             else if (node.parentElement) apply(node.parentElement);
           }));

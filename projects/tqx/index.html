@@ -7,7 +7,27 @@
 <style>html{background:#0a0a0a;color:#fff}body{margin:0}a{color:inherit}</style>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script>
 (() => {
-  async function readPortfolioEntry(url) {
+  async function collectPortfolioBytes(response, beforeRead) {
+  const reader = response.body.getReader();
+  const chunks = [];
+  let length = 0;
+  while (true) {
+    beforeRead();
+    const next = await reader.read();
+    if (next.done) break;
+    chunks.push(next.value);
+    length += next.value.byteLength;
+  }
+  const bytes = new Uint8Array(length);
+  let position = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, position);
+    position += chunk.byteLength;
+  }
+  return bytes;
+}
+
+async function readPortfolioEntry(url) {
   // A response can send its headers and then stop delivering the HTML body.
   // Keep the first attempt while bytes are arriving, and retry a stuck transfer once.
   for (const cache of ['default', 'reload']) {
@@ -26,23 +46,7 @@
         priority: 'high',
       });
       if (!response.ok) throw new Error('Portfolio document unavailable');
-      const reader = response.body.getReader();
-      const chunks = [];
-      let length = 0;
-      while (true) {
-        arm(cache === 'reload' ? 6500 : 3500);
-        const next = await reader.read();
-        if (next.done) break;
-        chunks.push(next.value);
-        length += next.value.byteLength;
-      }
-      const bytes = new Uint8Array(length);
-      let position = 0;
-      for (const chunk of chunks) {
-        bytes.set(chunk, position);
-        position += chunk.byteLength;
-      }
-      return bytes;
+      return await collectPortfolioBytes(response, () => arm(cache === 'reload' ? 6500 : 3500));
     } catch (error) {
       if (cache === 'reload') throw error;
     } finally {
@@ -51,35 +55,45 @@
   }
 }
 
-async function racePortfolioBytes(input, mirror, expected) {
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650) {
   const primary = new AbortController();
   const backup = new AbortController();
   let launchBackup;
   const headStart = new Promise(resolve => { launchBackup = resolve; });
-  const hedge = setTimeout(launchBackup, 650);
+  const hedge = setTimeout(launchBackup, hedgeDelay);
   const deadline = setTimeout(() => {
     primary.abort();
     backup.abort();
   }, 12000);
 
-  async function verify(url, options, source) {
-    const response = await fetch(url, options);
-    if (!response.ok) throw new Error('Portfolio resource unavailable');
-    const bytes = await response.arrayBuffer();
-    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-    const checksum = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
-    if (checksum !== expected) throw new Error('Portfolio resource changed');
-    return { bytes, source };
+  async function verify(url, options, controller, source) {
+    let idle;
+    const arm = delay => {
+      clearTimeout(idle);
+      idle = setTimeout(() => controller.abort(), delay);
+    };
+    try {
+      arm(5500);
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      if (!response.ok) throw new Error('Portfolio resource unavailable');
+      const bytes = await collectPortfolioBytes(response, () => arm(4000));
+      const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+      const checksum = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
+      if (checksum !== expected) throw new Error('Portfolio resource changed');
+      return { bytes, source };
+    } finally {
+      clearTimeout(idle);
+    }
   }
 
   try {
-    const original = verify(input, { signal: primary.signal }, 'origin').catch(error => {
+    const original = verify(input, {}, primary, 'origin').catch(error => {
       launchBackup();
       throw error;
     });
     const alternate = headStart.then(() => verify(mirror, {
-      mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer', signal: backup.signal,
-    }, 'mirror'));
+      mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer',
+    }, backup, 'mirror'));
     return await Promise.any([original, alternate]);
   } finally {
     clearTimeout(hedge);
@@ -108,7 +122,7 @@ async function racePortfolioBytes(input, mirror, expected) {
     workerReady.then(()=>{clearTimeout(timer);resolve();});
   });
   window.__portfolioTransportReady=transportReady;
-  window.__portfolioEntryDocument=racePortfolioBytes(selected.path,selected.mirror,selected.digest)
+  window.__portfolioEntryDocument=racePortfolioBytes(selected.path,selected.mirror,selected.digest,250)
     .then(({bytes})=>{
       if(window.caches){
         const key=new URL(selected.path,location.origin);
