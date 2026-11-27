@@ -19,13 +19,15 @@
       // Mount the selected original document at the existing address.
       const entry = window.__portfolioEntryDocument;
       delete window.__portfolioEntryDocument;
-      mount(await entry);
+      const [html] = await Promise.all([entry, window.__portfolioTransportReady]);
+      mount(html);
       return;
     }
     const embedded = document.getElementById('pages-entries');
     if (embedded) {
       const device = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent) ? 1 : 0;
       const original = JSON.parse(embedded.textContent)[device];
+      await window.__portfolioTransportReady;
       setTimeout(() => mount(original), 0);
       return;
     }

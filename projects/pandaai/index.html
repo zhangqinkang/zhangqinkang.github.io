@@ -54,6 +54,22 @@
   const variants=[{"resources": ["/assets/index-BtTUqiWb-pages-live.js?v=pages-native-4", "/assets/index-D-bYn1Q5.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-desktop.html"}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css", "/reference-sites/foreword-frames/player.js?v=pages-native-2"], "path": "/__entries/panda-mobile.html"}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
+  const serviceWorker=navigator.serviceWorker;
+  const startingHead=document.head;
+  const workerReady=new Promise(resolve=>{
+    if(!serviceWorker||serviceWorker.controller){resolve();return;}
+    const finish=()=>{
+      serviceWorker.removeEventListener('controllerchange',finish);
+      resolve();
+    };
+    serviceWorker.addEventListener('controllerchange',finish,{once:true});
+    serviceWorker.register('/_pages-worker.js',{scope:'/'}).catch(finish);
+  });
+  const transportReady=new Promise(resolve=>{
+    const timer=setTimeout(resolve,2000);
+    workerReady.then(()=>{clearTimeout(timer);resolve();});
+  });
+  window.__portfolioTransportReady=transportReady;
   if(selected.path){
     window.__portfolioEntryDocument=readPortfolioEntry(selected.path).then(bytes=>new TextDecoder().decode(bytes));
     window.__portfolioEntryDocument.catch(()=>{});
@@ -69,7 +85,7 @@
       element.rel='preload';
       element.as='style';
     }
-    document.head.appendChild(element);
+    workerReady.then(()=>{if(document.head===startingHead)startingHead.appendChild(element);});
   }
 })();
 </script>
@@ -86,13 +102,15 @@
       // Mount the selected original document at the existing address.
       const entry = window.__portfolioEntryDocument;
       delete window.__portfolioEntryDocument;
-      mount(await entry);
+      const [html] = await Promise.all([entry, window.__portfolioTransportReady]);
+      mount(html);
       return;
     }
     const embedded = document.getElementById('pages-entries');
     if (embedded) {
       const device = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent) ? 1 : 0;
       const original = JSON.parse(embedded.textContent)[device];
+      await window.__portfolioTransportReady;
       setTimeout(() => mount(original), 0);
       return;
     }

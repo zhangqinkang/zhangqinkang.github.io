@@ -201,6 +201,10 @@
     return index >= earlySectionEnd || index % 4 === 0;
   };
   const drawChart = (canvas, focusCanvas, markers, tick, hoveredModel, currency, hiddenModels) => {
+    markers.forEach((marker, index) => {
+      const hidden = hiddenModels.has(index);
+      if (marker && marker.hidden !== hidden) marker.hidden = hidden;
+    });
     const box = canvas.getBoundingClientRect();
     const ratio = chartPixelRatio();
     const width = Math.max(320, box.width), height = Math.max(260, box.height);
@@ -261,7 +265,6 @@
       const model = models[modelIndex];
       const marker = markers[modelIndex];
       const isHidden = hiddenModels.has(modelIndex);
-      if (marker) marker.hidden = isHidden;
       if (isHidden) return;
       ctx.beginPath();
       const liveOffset = Math.sin(tick / 1450 + modelIndex * 1.7) * 520;
@@ -287,29 +290,37 @@
       ctx.setLineDash(compact ? [1, 2] : []);
       ctx.stroke();
       if (marker) {
-        marker.style.left = (left + graphW - 18) + 'px';
         const avatar = marker.querySelector('img');
         const avatarCenterOffset = (avatar?.offsetTop || 0) + (avatar?.offsetHeight || 32) / 2;
-        markerPositions.push({ marker, modelIndex, endY: lastY, top: Math.max(top - 5, Math.min(top + graphH - 30, lastY - avatarCenterOffset)) });
-        marker.querySelector('.price span').textContent = currency === '%' ? '' : currency;
-        marker.querySelector('.price strong').textContent = currency === '%'
+        const price = currency === '%'
           ? ((((model.value + liveOffset) / 1000000 - 1) * 100) >= 0 ? '+' : '') + (((model.value + liveOffset) / 1000000 - 1) * 100).toFixed(2) + '%'
           : Math.round(model.value + liveOffset).toLocaleString('zh-CN');
-        marker.classList.toggle('is-hover-focus', focused);
-        marker.classList.toggle('is-hover-muted', hasFocus && !focused);
+        markerPositions.push({ marker, avatar, modelIndex, endY: lastY, price, focused, hasFocus, top: Math.max(top - 5, Math.min(top + graphH - 30, lastY - avatarCenterOffset)) });
       }
     });
     const minMarkerTop = top - 5;
     const maxMarkerTop = top + graphH - 30;
     markerPositions.forEach(item => {
       item.top = Math.max(minMarkerTop, Math.min(maxMarkerTop, item.top));
-      const renderedTop = item.top;
-      item.marker.style.top = renderedTop + 'px';
-      const avatar = item.marker.querySelector('img');
-      const avatarAnchorX = item.marker.offsetLeft + (avatar?.offsetLeft || 0) + (avatar?.offsetWidth || 32) / 2;
-      const avatarCenterY = renderedTop + (avatar?.offsetTop || 0) + (avatar?.offsetHeight || 32) / 2;
-      item.anchorX = avatarAnchorX;
-      item.anchorY = avatarCenterY;
+      const { marker } = item;
+      marker.style.top = item.top + 'px';
+      marker.style.left = (left + graphW - 18) + 'px';
+      const currencyNode = marker.querySelector('.price span');
+      const currencyText = currency === '%' ? '' : currency;
+      if (currencyNode.textContent !== currencyText) currencyNode.textContent = currencyText;
+      const priceNode = marker.querySelector('.price strong');
+      if (priceNode.textContent !== item.price) priceNode.textContent = item.price;
+      marker.classList.toggle('is-hover-focus', item.focused);
+      marker.classList.toggle('is-hover-muted', item.hasFocus && !item.focused);
+    });
+    markerPositions.forEach(item => {
+      const { avatar, marker } = item;
+      item.anchorX = marker.offsetLeft + (avatar?.offsetLeft || 0) + (avatar?.offsetWidth || 32) / 2;
+      item.anchorY = item.top + (avatar?.offsetTop || 0) + (avatar?.offsetHeight || 32) / 2;
+    });
+    markerPositions.forEach(item => {
+      const avatarAnchorX = item.anchorX;
+      const avatarCenterY = item.anchorY;
       item.marker.dataset.curveEndX = (left + graphW).toFixed(2);
       item.marker.dataset.curveEndY = item.endY.toFixed(2);
       item.marker.dataset.lineAnchorX = avatarAnchorX.toFixed(2);
