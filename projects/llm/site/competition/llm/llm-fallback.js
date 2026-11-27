@@ -1858,12 +1858,27 @@
     ];
     Promise.allSettled(criticalFonts).catch(() => {});
   };
+  const yieldPreviewFrame = () => {
+    if (!portfolioPreview) return;
+    return globalThis.scheduler?.yield?.() ?? new Promise(resolve => setTimeout(resolve, 0));
+  };
   const boot = () => {
+    void mountArena().catch(error => {
+      const container = document.querySelector('.llm-container');
+      if (container) container.dataset.arenaBooting = 'false';
+      revealPreboot();
+      console.error('[LLM compatibility] enhancement boot failed', error);
+    });
+  };
+  const mountArena = async () => {
     const container = document.querySelector('.llm-container');
     if (container) container.dataset.arenaBooting = 'true';
     const params = new URLSearchParams(location.search);
     const page = Math.max(0, Math.min(2, Number(params.get('page') || 0)));
-    installReturnLogic(); installSourceLogo(); installMarketLeader(); installChart();
+    installReturnLogic(); installSourceLogo(); installMarketLeader();
+    await yieldPreviewFrame();
+    installChart();
+    await yieldPreviewFrame();
     if (!livePreviewOnly && page === 1) {
       const rankingView = params.get('view');
       if (rankingView === 'ladder') installLeaderboard();
@@ -1872,7 +1887,11 @@
       else installRankingHub();
     } else if (!livePreviewOnly) installRankingHub();
     if (!livePreviewOnly) installModelDetails();
-    priceModelCards(); installFooterWheelScroll(); installLeaderboardTailScroll(); renderRecords(); renderChats(); renderHoldings(); installFilterStabilityGuard(); renderChampionPrediction(); installTabs(); installMainNavigation(); installMobileExperience(); installReturnLogic(); enforceTypographyMinimums();
+    priceModelCards(); installFooterWheelScroll(); installLeaderboardTailScroll(); renderRecords(); renderChats(); renderHoldings();
+    await yieldPreviewFrame();
+    installFilterStabilityGuard(); renderChampionPrediction(); installTabs(); installMainNavigation(); installMobileExperience(); installReturnLogic();
+    await yieldPreviewFrame();
+    enforceTypographyMinimums();
     bootAttempts += 1;
     const ready = page === 0 ? document.querySelector('.arena-chart-fallback') : page === 1 ? document.querySelector('.arena-ranking-hub,.arena-leaderboard,.arena-tournament,.arena-analysis') : document.querySelector('.arena-model-detail');
     if (ready) {

@@ -66,6 +66,8 @@
   const pending = new WeakMap();
   const restored = new WeakMap();
   const readyPreviews = new Set();
+  let lastScroll = -Infinity;
+  addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
   for (const [path, uri] of Object.entries(previews)) {
     const image = new Image();
     image.src = uri;
@@ -84,8 +86,13 @@
     state.loading = true;
     const original = new Image();
     select(original, state);
-    original.decode().then(() => {
+    const reveal = () => {
       if (pending.get(image) !== state || image.getAttribute('src') !== state.preview) return;
+      const idleIn = 115 - (performance.now() - lastScroll);
+      if (idleIn > 0) {
+        setTimeout(reveal, idleIn);
+        return;
+      }
       pending.delete(image);
       restored.set(image, state.source);
       visible.unobserve(image);
@@ -107,7 +114,8 @@
       image.addEventListener('load', finish);
       select(image, state);
       finish();
-    }, () => {
+    };
+    original.decode().then(reveal, () => {
       state.loading = false;
       // Keep the complete preview if the original is temporarily unavailable.
       // Re-entering the viewport will retry it.
