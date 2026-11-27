@@ -11,21 +11,6 @@
   const entries = JSON.parse(document.getElementById('pages-entries').textContent);
   const mobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected = entries[mobile && entries.length === 2 ? 1 : 0];
-  for (const url of selected?.preload || []) {
-    const filename = new URL(url, location.href).pathname;
-    const link = document.createElement('link');
-    link.href = url;
-    if (filename.endsWith('.js')) {
-      link.crossOrigin = 'anonymous';
-      link.rel = 'modulepreload';
-    } else {
-      link.rel = 'preload';
-      link.as = filename.endsWith('.css') ? 'style' : 'image';
-      if (link.as === 'image') link.fetchPriority = 'low';
-    }
-    document.head.appendChild(link);
-  }
-
   function mount(html) {
     document.open();
     document.write(html);
