@@ -59,6 +59,11 @@
     pending.push(resolve);
     schedule();
   });
+  const agent=navigator.userAgent;
+  const webKit=agent.includes('AppleWebKit/')&&!/Chrome\/|Chromium\/|Edg\/|OPR\//.test(agent);
+  // WebKit batches the delayed iframe work into the first scroll. Keep its
+  // original startup timing while retaining the frame-by-frame mount queue.
+  if(webKit)return;
   const readiness=new WeakMap();
   const waitForFrame=frame=>new Promise(resolve=>{
     let visible=false,timer,lastInput=performance.now();
