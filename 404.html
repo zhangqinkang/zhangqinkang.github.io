@@ -8,31 +8,23 @@
 <script type="application/json" id="pages-entries">[]</script>
 <body>
 <script data-fallback>(async () => {
+  const entries = JSON.parse(document.getElementById('pages-entries').textContent);
+  const mobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
+  const selected = entries[mobile && entries.length === 2 ? 1 : 0];
   function mount(html) {
     document.open();
     document.write(html);
     document.close();
   }
 
-  try {
-    const opening = document.getElementById('portfolio-opening');
-    if (opening) {
-      opening.addEventListener('click', event => {
-        const link = event.target.closest('a[href^="#"]');
-        if (link) window.__portfolioOpeningTarget = link.dataset.liveTarget || link.hash;
-      });
-    }
-    const selected = window.__portfolioColdEntry;
-    if (selected) {
-      const [html] = await selected;
-      if (!window.__portfolioOpeningTarget && document.getElementById('opening-projects') && scrollY > innerHeight * .4) {
-        window.__portfolioOpeningTarget = '#jack-showcase';
-      }
-      delete window.__portfolioColdEntry;
-      mount(html);
-      return;
-    }
+  if (selected) {
+    // Local modules, styles, and covers can render without waiting for the
+    // service worker. The real entry registers it in parallel for linked media.
+    setTimeout(() => mount(selected.html), 0);
+    return;
+  }
 
+  try {
     if (!navigator.serviceWorker) throw new Error('Service workers unavailable');
     if (document.currentScript?.hasAttribute('data-fallback') &&
         !/^\/(hk(?:\/|$)|en(?:\/|$)|docs(?:\/|$)|agent_quant(?:\/|$)|tqx(?:-|\.|Api))/.test(location.pathname)) {
