@@ -1837,12 +1837,12 @@
     renderResponsiveChartTitle();
   };
 
-  const enforceTypographyMinimums = () => {
+  const enforceTypographyMinimums = async () => {
     const root = document.querySelector('.llm-container');
     if (!root) return;
     const apply = scope => {
       const sizes = [];
-      [scope, ...scope.querySelectorAll('*')].forEach(element => {
+      const inspect = element => {
         if (/^(CANVAS|SVG|PATH|STYLE|SCRIPT)$/.test(element.tagName)) return;
         if (element.closest('.left-section .footer')) return;
         if (element.matches('.champion-name,.champion-row > strong,.champion-user-row > span,.champion-user-row > strong,.champion-user-row > time')) return;
@@ -1851,10 +1851,28 @@
         const minimum = /[\u3400-\u9fff\uf900-\ufaff]/.test(ownText) ? 12 : 10;
         const size = parseFloat(getComputedStyle(element).fontSize);
         if (Number.isFinite(size) && size < minimum) sizes.push([element, minimum]);
-      });
-      for (const [element, minimum] of sizes) element.style.setProperty('font-size', minimum + 'px', 'important');
+      };
+      const write = () => {
+        for (const [element, minimum] of sizes) element.style.setProperty('font-size', minimum + 'px', 'important');
+      };
+      const elements = [scope, ...scope.querySelectorAll('*')];
+      if (!portfolioPreview) {
+        elements.forEach(inspect);
+        write();
+        return;
+      }
+      return (async () => {
+        let budget = performance.now() + 5;
+        for (const element of elements) {
+          inspect(element);
+          if (performance.now() < budget) continue;
+          await yieldPreviewFrame();
+          budget = performance.now() + 5;
+        }
+        write();
+      })();
     };
-    apply(root);
+    await apply(root);
     if (livePreviewOnly) return;
     if (!root.dataset.typographyMinimumObserver) {
       let queued = false;
@@ -1982,9 +2000,11 @@
     if (!livePreviewOnly) installModelDetails();
     priceModelCards(); installFooterWheelScroll(); installLeaderboardTailScroll(); renderRecords(); renderChats(); renderHoldings();
     await yieldPreviewFrame();
-    installFilterStabilityGuard(); renderChampionPrediction(); installTabs(); installMainNavigation(); installMobileExperience(); installReturnLogic();
+    installFilterStabilityGuard(); renderChampionPrediction();
     await yieldPreviewFrame();
-    enforceTypographyMinimums();
+    installTabs(); installMainNavigation(); installMobileExperience(); installReturnLogic();
+    await yieldPreviewFrame();
+    await enforceTypographyMinimums();
     bootAttempts += 1;
     const ready = page === 0 ? document.querySelector('.arena-chart-fallback') : page === 1 ? document.querySelector('.arena-ranking-hub,.arena-leaderboard,.arena-tournament,.arena-analysis') : document.querySelector('.arena-model-detail');
     if (ready) {

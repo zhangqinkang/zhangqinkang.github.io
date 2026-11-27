@@ -190,7 +190,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
         const key=new URL(selected.path,location.origin);
         key.searchParams.set('entry-v',selected.digest.slice(0,16));
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
-        caches.open("portfolio-original-entries-f87f43e6bed746fd").then(cache=>cache.put(key,original)).catch(()=>{});
+        caches.open("portfolio-original-entries-32be69f11ba8c63b").then(cache=>cache.put(key,original)).catch(()=>{});
       }
       return bytes;
     })

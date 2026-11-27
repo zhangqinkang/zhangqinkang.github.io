@@ -35,9 +35,18 @@ export async function mountScanningHero(canvas, root, colorUrl, depthUrl, option
   // also requires both scenes to use that same instance across iframe realms.
   const library = phoneProof ? parent.__portfolioSharedScanDevice?.library ?? scanLibrary : scanLibrary
   const {THREE, abs, blendScreen, float, mod, mix, add, mx_cell_noise_float, oneMinus, pass, smoothstep, texture, uniform, uv, vec2, vec3, bloom} = library
+  // Present the archived image while the embedded app and scan each get
+  // their own frame for initialization.
+  try {
+    if (window.frameElement?.matches('.panda-v3-live-frame')) {
+      await top.__portfolioPandaFrame?.()
+      if (!canvas.isConnected) return () => {}
+    }
+  } catch {}
   const copyProof = phoneProof
   let mobileBrowser = matchMedia('(max-width:820px)').matches
-  try { mobileBrowser ||= parent.matchMedia('(max-width:820px)').matches } catch {}
+  // Embedded viewport dimensions describe the mockup, not the host device.
+  try { mobileBrowser = top.matchMedia('(max-width:820px)').matches } catch {}
   // Keep the original node material/bloom, but use WebGL on every phone
   // surface, including project covers before the proof chapter.
   const device = phoneProof ? acquireProofDevice(surface => new THREE.WebGPURenderer({canvas:surface, antialias:false, alpha:true, forceWebGL:true, preserveDrawingBuffer:true}), library) : null
