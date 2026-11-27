@@ -28,6 +28,11 @@ async function serve(request) {
   if (request.method === 'POST' && /^\/__panda_/.test(path)) {
     return new Response(null, { status: 204 });
   }
+  if (request.method === 'GET' &&
+      ['/pandaApi/user/wxShareInfo', '/pandaApi/user/track/click'].includes(path)) {
+    // Match the empty fallback format used by the original PandaAI preview.
+    return Response.json({ code: '200', message: 'preview fallback', data: {}, records: [], list: [], total: 0 });
+  }
   if (!['GET', 'HEAD'].includes(request.method)) return fetch(request);
 
   const userAgent = request.headers.get('User-Agent') || navigator.userAgent;

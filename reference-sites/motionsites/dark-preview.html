@@ -15,7 +15,7 @@
     <script>
       const frame = document.querySelector('#motionsites');
       const phoneReference = Boolean(window.frameElement?.closest('.panda-reference-live-window')) && parent.matchMedia('(max-width: 820px)').matches;
-      frame.src = phoneReference ? 'mobile-preview.html?v=20261010-4' : 'index.html?v=pages-reference-4';
+      frame.src = phoneReference ? 'mobile-preview.html?v=20261010-4' : 'index.html?v=pages-reference-5';
       if (phoneReference) frame.style.transform = 'none';
       let animationFrame;
       let motionStarted = false;
@@ -33,7 +33,10 @@
           startSmoothScroll();
           parent.postMessage({ type: 'portfolio-reference-ready' }, location.origin);
         }
-        if (event.data?.type === 'portfolio-scroll-state') pageScrolling = Boolean(event.data.active);
+        if (event.source === parent && event.origin === location.origin && event.data?.type === 'portfolio-scroll-state') {
+          pageScrolling = Boolean(event.data.active);
+          if (!phoneReference) frame.contentWindow?.postMessage(event.data, location.origin);
+        }
       });
       function useDarkReference() {
         const doc = frame.contentDocument;
@@ -62,7 +65,7 @@
       function startSmoothScroll() {
         const win = frame.contentWindow;
         const doc = frame.contentDocument;
-        if (!win || !doc || motionStarted) return;
+        if (!phoneReference || !win || !doc || motionStarted) return;
         motionStarted = true;
 
         const nativeScrollTo = win.scrollTo.bind(win);

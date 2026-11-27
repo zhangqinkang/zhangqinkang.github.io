@@ -24,13 +24,31 @@
  v.src=getClip?.(src)||src};
  videos.forEach(selectSource);addEventListener('resize',()=>videos.forEach(selectSource));
  let travel=900,last=performance.now(),ready=false;
- const outerVisible=()=>{const frame=window.frameElement;if(!frame)return true;const r=frame.getBoundingClientRect();return r.bottom>0&&r.top<parent.innerHeight};
- const outerNear=()=>{const frame=window.frameElement;if(!frame)return true;const r=frame.getBoundingClientRect();return r.bottom> -1400&&r.top<parent.innerHeight+1400};
+ let host=window.frameElement;
+ try{host=parent.frameElement||host}catch{}
+ let scrolling=false;
+ addEventListener('message',event=>{
+   if(event.source===parent&&event.origin===location.origin&&event.data?.type==='portfolio-scroll-state'){
+     scrolling=Boolean(event.data.active);
+   }
+ });
+ const outerVisible=(margin=0)=>{
+   if(!host)return true;
+   const bounds=host.getBoundingClientRect();
+   return bounds.bottom>-margin&&bounds.top<host.ownerDocument.defaultView.innerHeight+margin;
+ };
+ const outerNear=()=>!document.hidden&&outerVisible(650);
  const publish=()=>{if(ready)return;ready=true;window.__portfolioReferenceReady=true;parent.postMessage({type:'portfolio-reference-ready'},location.origin)};
  const tick=now=>{
   const visible=outerVisible()&&!document.hidden,dt=Math.min(50,now-last);last=now;
-  if(visible){travel+=dt;const limit=Math.min(Math.max(0,document.body.scrollHeight-innerHeight),innerHeight);const phase=(travel%18000)/18000;const y=limit*(.5-.5*Math.cos(phase*Math.PI*2));document.body.style.willChange='transform';document.body.style.transform=`translate3d(0,${-y}px,0)`}
-  for(const v of videos){const r=v.getBoundingClientRect();const near=r.bottom>0&&r.top<innerHeight+500;if(near&&v.preload!=='auto'){v.preload='auto';v.load()}const active=outerNear()&&!document.hidden&&r.bottom>0&&r.top<innerHeight;if(active){if(v.paused)void v.play().catch(()=>{});if(v.currentTime>0)publish()}else if(!v.paused)v.pause()}
+  if(visible&&!scrolling){travel+=dt;const limit=Math.min(Math.max(0,document.body.scrollHeight-innerHeight),innerHeight);const phase=(travel%18000)/18000;const y=limit*(.5-.5*Math.cos(phase*Math.PI*2));document.body.style.willChange='transform';document.body.style.transform=`translate3d(0,${-y}px,0)`}
+  const nearHost=outerNear();
+  if(!nearHost){
+   videos.forEach(video=>{if(!video.paused)video.pause()});
+   requestAnimationFrame(tick);
+   return;
+  }
+  for(const v of videos){const r=v.getBoundingClientRect();const near=r.bottom>0&&r.top<innerHeight+500;if(near&&v.preload!=='auto'){v.preload='auto';v.load()}const active=r.bottom>0&&r.top<innerHeight;if(active){if(v.paused)void v.play().catch(()=>{});if(v.currentTime>0)publish()}else if(!v.paused)v.pause()}
   requestAnimationFrame(tick);
  };
  // Prime only the first view; lower rows retain native metadata loading.
