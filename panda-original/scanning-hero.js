@@ -154,7 +154,10 @@ export async function mountScanningHero(canvas, root, colorUrl, depthUrl, option
     const width = root.clientWidth
     const height = root.clientHeight
     if (!width || !height) return
-    let pixelRatio = Math.min(window.devicePixelRatio, options.maxPixelRatio ?? 2)
+    const displayedRatio = root.getBoundingClientRect().width / width || 1
+    const visiblePixels = Math.max(.5, displayedRatio * window.devicePixelRatio)
+    const mobileLimit = mobileBrowser && options.fitCover ? 1.25 : 2
+    let pixelRatio = Math.min(visiblePixels, mobileLimit, options.maxPixelRatio ?? 2)
     if (phoneProof) {
       // Size the scan buffers for the physical pixels of the fitted card,
       // rather than a fixed fraction of its 1440px virtual desktop viewport.
@@ -260,15 +263,17 @@ export async function mountScanningHero(canvas, root, colorUrl, depthUrl, option
     postProcessing.outputNode = output.add(bloomPass)
   }
 
-  let active = true
+  const entryBounds = root.getBoundingClientRect()
+  let active = phoneProof || entryBounds.bottom > 0 && entryBounds.top < innerHeight
   let shown = false
   let inPhoneViewport = true
   let lastRenderedAt = 0
-  const hasFrameCap = Number.isFinite(options.fps) && options.fps > 0
-  const frameInterval = hasFrameCap ? 1000 / options.fps : 0
+  const framesPerSecond = Number.isFinite(options.fps) && options.fps > 0 ? options.fps : mobileBrowser && options.fitCover ? 30 : 0
+  const hasFrameCap = framesPerSecond > 0
+  const frameInterval = hasFrameCap ? 1000 / framesPerSecond : 0
   let startedAt = performance.now()
   const render = () => {
-    if (disposed || phoneProof && painting) return
+    if (disposed || painting) return
     const now = performance.now()
     const interval = phoneProof ? (inPhoneViewport ? Math.max(frameInterval, 1000 / 24) : 250) : frameInterval
     if (interval && now - lastRenderedAt < interval) return
@@ -292,7 +297,7 @@ export async function mountScanningHero(canvas, root, colorUrl, depthUrl, option
       scan.value = -0.05 + 1.1 * eased
     }
 
-    if (phoneProof) painting = true
+    painting = true
     const draw = () => options.overlayOnly ? renderer.renderAsync(scene, camera) : postProcessing.renderAsync()
     if (phoneProof) {
       inFlight = device.submit(async () => {
@@ -333,11 +338,18 @@ export async function mountScanningHero(canvas, root, colorUrl, depthUrl, option
         stopLoop()
       }).finally(() => { painting = false })
     } else {
-      inFlight = Promise.resolve(draw())
-      if (!shown) {
-        shown = true
-        inFlight.then(() => { canvas.style.opacity = '1'; canvas.dispatchEvent(new Event('panda-scan-ready')) })
-      }
+      inFlight = Promise.resolve().then(draw).then(() => {
+        if (!disposed && !shown) {
+          shown = true
+          canvas.style.opacity = '1'
+          canvas.dispatchEvent(new Event('panda-scan-ready'))
+        }
+      }).catch(error => {
+        if (disposed) return
+        canvas.dataset.renderError = String(error)
+        active = false
+        stopLoop()
+      }).finally(() => { painting = false })
     }
   }
   let animationFrame = 0
@@ -361,7 +373,7 @@ export async function mountScanningHero(canvas, root, colorUrl, depthUrl, option
     animationFrame = 0
     if (!hasFrameCap && !phoneProof) renderer.setAnimationLoop(null)
   }
-  startLoop()
+  if (active) startLoop()
   // Offscreen phone iframes can suspend rAF. Warm an actual original shader
   // frame directly, with bounded retries until its display copy has pixels.
   const warmTimer = phoneProof ? setInterval(() => {
