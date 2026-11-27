@@ -114,6 +114,12 @@
   text-decoration: none;
   background: #151518;
 }
+[data-portfolio-handoff] #home :is(.name-reveal,.blur-in),
+[data-portfolio-handoff] #top .panda-case-hero-content :is(h1,.panda-case-hero-kicker,.panda-case-hero-deck) {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
 @media (max-width: 700px) {
   #portfolio-opening .opening-nav { height: 52px; padding-inline: 16px; }
   #portfolio-opening .opening-main { min-height: calc(100svh - 52px); }
@@ -272,6 +278,7 @@
   const opening = document.getElementById('portfolio-opening');
   const root = document.getElementById('root');
   if (!opening || !root) return;
+  document.documentElement.dataset.portfolioHandoff = '';
 
   let firstMount = 0;
   let frame = 0;
@@ -279,6 +286,7 @@
     observer.disconnect();
     cancelAnimationFrame(frame);
     opening.remove();
+    setTimeout(() => { delete document.documentElement.dataset.portfolioHandoff; }, 1500);
     const targetId = window.__portfolioOpeningTarget?.slice(1);
     delete window.__portfolioOpeningTarget;
     if (!targetId) return;
