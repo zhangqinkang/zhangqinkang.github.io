@@ -777,6 +777,23 @@
     });
   };
 
+  const rankingCleanup = new WeakMap();
+  const replaceRankingContent = (host, content) => {
+    rankingCleanup.get(host.firstElementChild)?.();
+    host.replaceChildren(content);
+  };
+  const renderRankingView = view => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', '1');
+    if (view) url.searchParams.set('view', view);
+    else url.searchParams.delete('view');
+    history.replaceState(null, '', url);
+    if (view === 'ladder') installLeaderboard(true);
+    else if (view === 'tournament') installTournament(true);
+    else if (view === 'analysis') installAnalysis(true);
+    else installRankingHub(true);
+  };
+
   const installRankingHub = (force = false) => {
     const host = document.querySelector('.llm-leaderboard');
     if (!host || (!force && host.querySelector('.arena-ranking-hub'))) return;
@@ -790,22 +807,13 @@
     cards.forEach(card => {
       card.addEventListener('pointerenter', () => selectCard(card));
       card.addEventListener('focus', () => selectCard(card));
-      card.addEventListener('click', () => {
-        const rankingView = card.dataset.rankingView;
-        const url = new URL(window.location.href);
-        url.searchParams.set('page', '1');
-        url.searchParams.set('view', rankingView);
-        history.replaceState(null, '', url);
-        if (rankingView === 'ladder') installLeaderboard(true);
-        if (rankingView === 'tournament') installTournament(true);
-        if (rankingView === 'analysis') installAnalysis(true);
-      });
+      card.addEventListener('click', () => renderRankingView(card.dataset.rankingView));
     });
     hub.querySelector('.ranking-hub-document button')?.addEventListener('click', event => {
       event.preventDefault();
       openInlineRules();
     });
-    host.replaceChildren(hub);
+    replaceRankingContent(host, hub);
   };
 
   const returnToRankingHub = () => {
@@ -862,7 +870,7 @@
     }));
     board.querySelectorAll('.tournament-pagination nav button').forEach(button => button.addEventListener('click', () => { if (!/^\d+$/.test(button.textContent)) return; board.querySelectorAll('.tournament-pagination nav button').forEach(item => item.classList.toggle('is-current', item === button)); }));
     wireCompetitionPickers(board); installHorizontalDrag(board.querySelector('.tournament-table-scroll'));
-    host.replaceChildren(board);
+    replaceRankingContent(host, board);
   };
 
   const analysisSpark = [18,12,26,20,35,31,42,36,60,48,43,50];
@@ -952,6 +960,7 @@
     const animateProgress = update => {
       let start = 0;
       const frame = time => {
+        if (!board.isConnected) return;
         if (!start) start = time;
         const raw = Math.min(1,(time-start)/900);
         update(1-Math.pow(1-raw,3));
@@ -973,11 +982,13 @@
     updateMetricCounts(0);
     canvases.forEach(canvas => drawAnalysisCanvas(canvas,0));
     installHorizontalDrag(board.querySelector('.analysis-table-scroll'));
-    host.replaceChildren(board);
-    requestAnimationFrame(() => {
+    replaceRankingContent(host, board);
+    let observer;
+    const revealFrame = requestAnimationFrame(() => {
+      if (!board.isConnected) return;
       redraw();
       if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+        observer = new IntersectionObserver(entries => entries.forEach(entry => {
           if (!entry.isIntersecting) return;
           if (entry.target === metricBlock) revealMetrics(); else revealCanvas(entry.target);
           observer.unobserve(entry.target);
@@ -988,7 +999,13 @@
         revealMetrics();canvases.forEach(revealCanvas);
       }
     });
-    if ('ResizeObserver' in window) new ResizeObserver(redraw).observe(board);
+    const sizeObserver = 'ResizeObserver' in window ? new ResizeObserver(redraw) : null;
+    sizeObserver?.observe(board);
+    rankingCleanup.set(board, () => {
+      cancelAnimationFrame(revealFrame);
+      observer?.disconnect();
+      sizeObserver?.disconnect();
+    });
   };
 
   const installLeaderboard = (force = false) => {
@@ -1088,7 +1105,7 @@
       modelCell.addEventListener('click', open);
       modelCell.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
     });
-    host.replaceChildren(board);
+    replaceRankingContent(host, board);
   };
 
   const installModelDetails = () => {
@@ -1179,6 +1196,8 @@
     }));
   };
 
+  let showArenaPage;
+  const boundArenaMenuItems = new WeakSet();
   const installMainNavigation = () => {
     const live = document.querySelector('.llm-live'), leaderboard = document.querySelector('.llm-leaderboard'), model = document.querySelector('.llm-model');
     const menus = document.querySelectorAll('.llm-navbar > .menu, .llm-wrapper > .menu');
@@ -1190,7 +1209,9 @@
         if (index === 0) {
           live.style.display = '';
           live.style.visibility = '';
-          live.querySelector('.arena-chart-fallback')?.dispatchEvent(new Event('arena:redraw'));
+          const redraw = () => live.querySelector('.arena-chart-fallback')?.dispatchEvent(new Event('arena:redraw'));
+          if (portfolioPreview) liveRevealFrame = requestAnimationFrame(redraw);
+          else redraw();
         } else {
           live.style.display = 'none';
           live.style.visibility = '';
@@ -1207,17 +1228,21 @@
       if (mobileBottom) mobileBottom.hidden = index !== 0;
       const url = new URL(window.location.href); url.searchParams.set('page', String(index)); history.replaceState(null, '', url);
     };
-    menus.forEach(menu => [...menu.querySelectorAll('.menu-item')].forEach((item,index) => item.addEventListener('click', event => {
-      event.preventDefault(); event.stopImmediatePropagation();
-      if (index === 1) {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('view');
-        history.replaceState(null, '', url);
-        installRankingHub(true);
-      }
-      show(index);
-    }, true)));
-    show(Math.max(0, Math.min(2, Number(new URLSearchParams(location.search).get('page') || 0))));
+    let newlyBound = false;
+    menus.forEach(menu => [...menu.querySelectorAll('.menu-item')].forEach((item,index) => {
+      if (boundArenaMenuItems.has(item)) return;
+      boundArenaMenuItems.add(item);
+      newlyBound = true;
+      item.addEventListener('click', event => {
+        event.preventDefault(); event.stopImmediatePropagation();
+        if (index === 1) renderRankingView();
+        showArenaPage(index);
+      }, true);
+    }));
+    if (!showArenaPage || newlyBound) {
+      showArenaPage = show;
+      show(Math.max(0, Math.min(2, Number(new URLSearchParams(location.search).get('page') || 0))));
+    }
   };
 
   // The portfolio gallery keeps this live document mounted while changing views.
@@ -1228,8 +1253,13 @@
     if (!items?.length) return false;
     const page = view === 'live' ? 0 : view === 'model' ? 2 : 1;
     if (view !== document.documentElement.dataset.portfolioArenaView) {
-      items[page]?.click();
-      if (page === 1 && view !== 'ranking') document.querySelector(`.ranking-hub-card[data-ranking-view="${view}"]`)?.click();
+      if (showArenaPage) {
+        if (page === 1) renderRankingView(view === 'ranking' ? undefined : view);
+        showArenaPage(page);
+      } else {
+        items[page]?.click();
+        if (page === 1 && view !== 'ranking') document.querySelector(`.ranking-hub-card[data-ranking-view="${view}"]`)?.click();
+      }
       document.documentElement.dataset.portfolioArenaView = view;
     }
     document.querySelector('.llm-wrapper')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });

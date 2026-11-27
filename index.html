@@ -55,16 +55,57 @@ async function readPortfolioEntry(url) {
   }
 }
 
-async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650) {
+async function verifyPortfolioBytes(bytes, expected) {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  const checksum = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
+  if (checksum !== expected) throw new Error('Portfolio resource changed');
+  return bytes;
+}
+
+async function readPortfolioPack(pack, signal, expected) {
+  const chunks = await Promise.all(Array.from({ length: pack.parts }, async (_, index) => {
+    const url = new URL(pack.path + index + '.bin', location.origin);
+    for (const cache of ['default', 'reload']) {
+      const controller = new AbortController();
+      const abort = () => controller.abort();
+      signal.addEventListener('abort', abort, { once: true });
+      let idle;
+      const arm = delay => {
+        clearTimeout(idle);
+        idle = setTimeout(abort, delay);
+      };
+      try {
+        if (signal.aborted) throw signal.reason;
+        arm(cache === 'reload' ? 3900 : 2600);
+        const response = await fetch(url, { cache, signal: controller.signal, priority: 'high' });
+        if (!response.ok) throw new Error('Portfolio part unavailable');
+        return await collectPortfolioBytes(response, () => arm(2300));
+      } catch (error) {
+        if (cache === 'reload' || signal.aborted) throw error;
+      } finally {
+        clearTimeout(idle);
+        signal.removeEventListener('abort', abort);
+      }
+    }
+  }));
+  const stream = new Blob(chunks).stream().pipeThrough(new DecompressionStream('gzip'));
+  return verifyPortfolioBytes(await new Response(stream).arrayBuffer(), expected);
+}
+
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack) {
   const primary = new AbortController();
   const backup = new AbortController();
+  const split = new AbortController();
   let launchBackup;
   const headStart = new Promise(resolve => { launchBackup = resolve; });
   const hedge = setTimeout(launchBackup, hedgeDelay);
   const deadline = setTimeout(() => {
     primary.abort();
     backup.abort();
+    split.abort();
   }, 12000);
+  let splitTimer;
+  let lastProgress = 0;
 
   async function verify(url, options, controller, source) {
     let idle;
@@ -76,10 +117,10 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650) {
       arm(5500);
       const response = await fetch(url, { ...options, signal: controller.signal });
       if (!response.ok) throw new Error('Portfolio resource unavailable');
-      const bytes = await collectPortfolioBytes(response, () => arm(4000));
-      const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-      const checksum = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
-      if (checksum !== expected) throw new Error('Portfolio resource changed');
+      const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, () => {
+        lastProgress = performance.now();
+        arm(4000);
+      }), expected);
       return { bytes, source };
     } finally {
       clearTimeout(idle);
@@ -94,16 +135,37 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650) {
     const alternate = headStart.then(() => verify(mirror, {
       mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer',
     }, backup, 'mirror'));
-    return await Promise.any([original, alternate]);
+    const choices = [original, alternate];
+    if (pack && typeof DecompressionStream === 'function') {
+      const wait = new Promise(resolve => {
+        const started = performance.now();
+        const check = () => {
+          const now = performance.now();
+          // A healthy transfer gets to finish without competing with its own parts.
+          if (now - lastProgress < 450 && now - started < 2100) {
+            splitTimer = setTimeout(check, 450);
+          } else {
+            resolve();
+          }
+        };
+        splitTimer = setTimeout(check, 1250);
+      });
+      choices.push(wait.then(async () => ({
+        bytes: await readPortfolioPack(pack, split.signal, expected), source: 'segments',
+      })));
+    }
+    return await Promise.any(choices);
   } finally {
     clearTimeout(hedge);
     clearTimeout(deadline);
+    clearTimeout(splitTimer);
     primary.abort();
     backup.abort();
+    split.abort();
   }
 }
 
-  const variants=[{"resources": ["/assets/index-C_YUaifs.js?v=pages-edge-2", "/assets/index-aRib4OP-.css"], "path": "/__entries/home-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/home-desktop.html", "digest": "bff4caa0b9688bb534f3d0f50533d9c45a140b5d27b03e6e6548933a78a7ce19"}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css"], "path": "/__entries/home-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/home-mobile.html", "digest": "03e6b42c6218883b4f91b95dfe336f81297ab81bfff0fe84e6370a0f16259de0"}];
+  const variants=[{"resources": ["/assets/index-C_YUaifs.js?v=pages-edge-2", "/assets/index-aRib4OP-.css"], "path": "/__entries/home-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/home-desktop.html", "digest": "bff4caa0b9688bb534f3d0f50533d9c45a140b5d27b03e6e6548933a78a7ce19", "pack": {"path": "/__startup-packs/bff4caa0b9688bb534f3d0f5/", "parts": 4}}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css"], "path": "/__entries/home-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@711f65841b66bdc7b24fd69a3302eb599bf83093/__entries/home-mobile.html", "digest": "03e6b42c6218883b4f91b95dfe336f81297ab81bfff0fe84e6370a0f16259de0", "pack": {"path": "/__startup-packs/03e6b42c6218883b4f91b95d/", "parts": 4}}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
   const serviceWorker=navigator.serviceWorker;
@@ -122,7 +184,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650) {
     workerReady.then(()=>{clearTimeout(timer);resolve();});
   });
   window.__portfolioTransportReady=transportReady;
-  window.__portfolioEntryDocument=racePortfolioBytes(selected.path,selected.mirror,selected.digest,250)
+  window.__portfolioEntryDocument=racePortfolioBytes(selected.path,selected.mirror,selected.digest,250,selected.pack)
     .then(({bytes})=>{
       if(window.caches){
         const key=new URL(selected.path,location.origin);
