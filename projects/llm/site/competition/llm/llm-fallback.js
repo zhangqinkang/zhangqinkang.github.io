@@ -1219,6 +1219,8 @@
       }
       if (leaderboard) leaderboard.style.display = index === 1 ? '' : 'none';
       if (model) {
+        if (portfolioPreview && !livePreviewOnly && index === 2 &&
+            !model.querySelector('.arena-model-detail')) installModelDetails();
         model.style.display = index === 2 ? '' : 'none';
         if (index === 2) model.querySelector('.arena-model-detail')?.dispatchEvent(new Event('arena:model-enter'));
       }
@@ -1996,8 +1998,8 @@
       else if (rankingView === 'tournament') installTournament();
       else if (rankingView === 'analysis') installAnalysis();
       else installRankingHub();
-    } else if (!livePreviewOnly) installRankingHub();
-    if (!livePreviewOnly) installModelDetails();
+    } else if (!livePreviewOnly && !portfolioPreview) installRankingHub();
+    if (!livePreviewOnly && (!portfolioPreview || page === 2)) installModelDetails();
     priceModelCards(); installFooterWheelScroll(); installLeaderboardTailScroll(); renderRecords(); renderChats(); renderHoldings();
     await yieldPreviewFrame();
     installFilterStabilityGuard(); renderChampionPrediction();
