@@ -701,14 +701,40 @@
     };
     fallback.addEventListener('arena:redraw', () => redrawChart(performance.now()));
     redrawChart(performance.now());
+    let frameId = 0;
+    let onScreen = !portfolioPreview;
+    let layerVisible = true;
+    const frameElement = portfolioPreview ? window.frameElement : null;
+    const layer = frameElement?.closest('.match-frame-layer');
+    const scheduleChart = () => {
+      if (!frameId && onScreen && layerVisible && !document.hidden) frameId = requestAnimationFrame(frame);
+    };
     const frame = time => {
-      if ((!livePreviewOnly || document.documentElement.dataset.portfolioPreviewPaused !== 'true') && (!livePreviewOnly || time - lastFrame >= 1000 / 30)) {
+      frameId = 0;
+      if (!onScreen || !layerVisible || document.hidden) return;
+      const paused = livePreviewOnly && document.documentElement.dataset.portfolioPreviewPaused === 'true';
+      if (!paused && (!portfolioPreview || time - lastFrame >= 1000 / 30)) {
         const bounds = canvas.getBoundingClientRect();
         if (bounds.width > 0 && bounds.height > 0) redrawChart(time);
       }
-      requestAnimationFrame(frame);
+      scheduleChart();
     };
-    requestAnimationFrame(frame);
+    if (portfolioPreview) {
+      new IntersectionObserver(([entry]) => {
+        onScreen = entry.isIntersecting;
+        scheduleChart();
+      }).observe(canvas);
+      if (layer) {
+        const syncLayer = () => {
+          layerVisible = !layer.matches('.is-hidden,.is-preparing');
+          scheduleChart();
+        };
+        new MutationObserver(syncLayer).observe(layer, { attributes:true, attributeFilter:['class'] });
+        syncLayer();
+      }
+    }
+    document.addEventListener('visibilitychange', scheduleChart);
+    scheduleChart();
   };
 
   const leaderboardRows = [
@@ -1774,6 +1800,7 @@
     const root = document.querySelector('.llm-container');
     if (!root) return;
     const apply = scope => {
+      const sizes = [];
       [scope, ...scope.querySelectorAll('*')].forEach(element => {
         if (/^(CANVAS|SVG|PATH|STYLE|SCRIPT)$/.test(element.tagName)) return;
         if (element.closest('.left-section .footer')) return;
@@ -1782,8 +1809,9 @@
         if (!ownText) return;
         const minimum = /[\u3400-\u9fff\uf900-\ufaff]/.test(ownText) ? 12 : 10;
         const size = parseFloat(getComputedStyle(element).fontSize);
-        if (Number.isFinite(size) && size < minimum) element.style.setProperty('font-size', minimum + 'px', 'important');
+        if (Number.isFinite(size) && size < minimum) sizes.push([element, minimum]);
       });
+      for (const [element, minimum] of sizes) element.style.setProperty('font-size', minimum + 'px', 'important');
     };
     apply(root);
     if (livePreviewOnly) return;
