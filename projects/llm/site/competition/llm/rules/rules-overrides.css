@@ -1,5 +1,5 @@
 @font-face{font-display:swap;font-family:fusion-pixel;font-style:normal;font-weight:400;src:url(/projects/llm/site/_nuxt/fusion-pixel.CrxqOKMS.otf) format("opentype")}
-@font-face{font-display:swap;font-family:PuHuiTi_Regular;font-style:normal;font-weight:400;src:url(/projects/llm/site/_nuxt/Alibaba_PuHuiTi_2.0_55_Regular_55_Regular.v0Jvxhj3.ttf) format("truetype")}
+@font-face{font-display:swap;font-family:PuHuiTi_Regular;font-style:normal;font-weight:400;src:url(/fonts/Alibaba-PuHuiTi-Regular.ttf) format("truetype")}
 *{box-sizing:border-box}
 html{background:#f7f7f8;color:#111;scrollbar-width:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
