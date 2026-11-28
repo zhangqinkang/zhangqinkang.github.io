@@ -326,6 +326,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   if(selected.pandaScan){
     let pending;
     window.__portfolioPandaScan=()=>pending??=prepareSharedPandaScan(selected.pandaScan,racePortfolioBytes);
+    window.__portfolioEntryDocument.then(window.__portfolioPandaScan,()=>{});
   }
   if(selected.coldAssets?.length&&!serviceWorker?.controller){
     window.__portfolioColdAssets=prepareColdAssets(selected.coldAssets,racePortfolioBytes);

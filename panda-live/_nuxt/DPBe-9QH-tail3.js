@@ -5,7 +5,7 @@ var us=Object.defineProperty;var ps=(e,a,i)=>a in e?us(e,a,{enumerable:!0,config
 const params=new URLSearchParams(location.search), proof=params.get('proof');
 const embeddedScan=(!proof||proof==='hero'||proof==='finance-direction')&&
   (params.has('embed')||params.has('mobile')||proof)&&
-  document.querySelector('script[src^="/panda-live/embed-scan.js"]');
+  document.querySelector('script[src^="/panda-live/embed-scan.js"], script[data-panda-embed-scan]');
 if(embeddedScan)return;
 if(window.frameElement){
   let view=window, host=window.frameElement;

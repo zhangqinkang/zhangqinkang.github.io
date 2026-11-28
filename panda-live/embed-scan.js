@@ -250,7 +250,7 @@ const revealSourcePage = async () => {
   })
   const heroImage = await findHero()
   const localHero = '/marquee/panda-home-astronaut.webp'
-  if (heroImage.getAttribute('src') !== localHero) heroImage.src = localHero
+  if (!window.__portfolioScanFirst && heroImage.getAttribute('src') !== localHero) heroImage.src = localHero
   if (!heroImage.complete) {
     try { await heroImage.decode() } catch {}
   }
@@ -347,8 +347,8 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     await mountScanningHero(
       canvas,
       root,
-      '/marquee/panda-home-astronaut.webp',
-      '/marquee/panda-home-depth.webp',
+      window.__portfolioScanColor ?? '/marquee/panda-home-astronaut.webp',
+      window.__portfolioScanDepth ?? '/marquee/panda-home-depth.webp',
       mobile
         ? {
             lockPosition: true,
