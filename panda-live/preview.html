@@ -1,0 +1,173 @@
+<!doctype html><meta charset="utf-8"><style>html{background:#000}</style><script>async function collectPortfolioBytes(response, beforeRead) {
+  const reader = response.body.getReader();
+  const chunks = [];
+  let length = 0;
+  while (true) {
+    beforeRead();
+    const next = await reader.read();
+    if (next.done) break;
+    chunks.push(next.value);
+    length += next.value.byteLength;
+  }
+  const bytes = new Uint8Array(length);
+  let position = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, position);
+    position += chunk.byteLength;
+  }
+  return bytes;
+}
+
+async function readPortfolioEntry(url) {
+  // A response can send its headers and then stop delivering the HTML body.
+  // Keep the first attempt while bytes are arriving, and retry a stuck transfer once.
+  for (const cache of ['default', 'reload']) {
+    const controller = new AbortController();
+    let timeout;
+    const arm = delay => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => controller.abort(), delay);
+    };
+
+    try {
+      arm(cache === 'reload' ? 10000 : 4500);
+      const response = await fetch(url, {
+        cache,
+        signal: controller.signal,
+        priority: 'high',
+      });
+      if (!response.ok) throw new Error('Portfolio document unavailable');
+      return await collectPortfolioBytes(response, () => arm(cache === 'reload' ? 6500 : 3500));
+    } catch (error) {
+      if (cache === 'reload') throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+}
+
+async function verifyPortfolioBytes(bytes, expected) {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  const checksum = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
+  if (checksum !== expected) throw new Error('Portfolio resource changed');
+  return bytes;
+}
+
+async function readPortfolioPack(pack, signal, expected) {
+  const chunks = await Promise.all(Array.from({ length: pack.parts }, async (_, index) => {
+    const url = new URL(pack.path + index + '.bin', location.origin);
+    for (const cache of ['default', 'reload']) {
+      const controller = new AbortController();
+      const abort = () => controller.abort();
+      signal.addEventListener('abort', abort, { once: true });
+      let idle;
+      const arm = delay => {
+        clearTimeout(idle);
+        idle = setTimeout(abort, delay);
+      };
+      try {
+        if (signal.aborted) throw signal.reason;
+        arm(cache === 'reload' ? 3900 : 2600);
+        const response = await fetch(url, { cache, signal: controller.signal, priority: 'high' });
+        if (!response.ok) throw new Error('Portfolio part unavailable');
+        return await collectPortfolioBytes(response, () => arm(2300));
+      } catch (error) {
+        if (cache === 'reload' || signal.aborted) throw error;
+      } finally {
+        clearTimeout(idle);
+        signal.removeEventListener('abort', abort);
+      }
+    }
+  }));
+  const stream = new Blob(chunks).stream().pipeThrough(new DecompressionStream('gzip'));
+  return verifyPortfolioBytes(await new Response(stream).arrayBuffer(), expected);
+}
+
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack) {
+  const primary = new AbortController();
+  const backup = new AbortController();
+  const split = new AbortController();
+  let launchBackup;
+  const headStart = new Promise(resolve => { launchBackup = resolve; });
+  const hedge = setTimeout(launchBackup, hedgeDelay);
+  const deadline = setTimeout(() => {
+    primary.abort();
+    backup.abort();
+    split.abort();
+  }, 12000);
+  let splitTimer;
+  let lastProgress = 0;
+
+  async function verify(url, options, controller, source) {
+    let idle;
+    const arm = delay => {
+      clearTimeout(idle);
+      idle = setTimeout(() => controller.abort(), delay);
+    };
+    try {
+      arm(5500);
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      if (!response.ok) throw new Error('Portfolio resource unavailable');
+      const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, () => {
+        lastProgress = performance.now();
+        arm(4000);
+      }), expected);
+      return { bytes, source };
+    } finally {
+      clearTimeout(idle);
+    }
+  }
+
+  try {
+    const original = verify(input, {}, primary, 'origin').catch(error => {
+      launchBackup();
+      throw error;
+    });
+    const alternate = headStart.then(() => verify(mirror, {
+      mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer',
+    }, backup, 'mirror'));
+    const choices = [original, alternate];
+    if (pack && typeof DecompressionStream === 'function') {
+      const wait = new Promise(resolve => {
+        const started = performance.now();
+        const check = () => {
+          const now = performance.now();
+          // A healthy transfer gets to finish without competing with its own parts.
+          if (now - lastProgress < 450 && now - started < 2100) {
+            splitTimer = setTimeout(check, 450);
+          } else {
+            resolve();
+          }
+        };
+        splitTimer = setTimeout(check, 1250);
+      });
+      choices.push(wait.then(async () => ({
+        bytes: await readPortfolioPack(pack, split.signal, expected), source: 'segments',
+      })));
+    }
+    return await Promise.any(choices);
+  } finally {
+    clearTimeout(hedge);
+    clearTimeout(deadline);
+    clearTimeout(splitTimer);
+    primary.abort();
+    backup.abort();
+    split.abort();
+  }
+}
+(async () => {
+  const source = {"path": "/__entries/static-panda-live-index.html"};
+  const canonicalURL = '/panda-live/' + location.search + location.hash;
+  try {
+    const shared = window.top !== window ? window.top.__portfolioPandaSource : null;
+    const local = () => readPortfolioEntry(source.path).then(bytes => new TextDecoder().decode(bytes));
+    const html = await (shared || local()).catch(local);
+    history.replaceState(history.state, '', canonicalURL);
+    document.open();
+    document.write(html);
+    document.close();
+  } catch {
+    location.replace(canonicalURL);
+  }
+})();
+</script>

@@ -293,6 +293,12 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     .catch(()=>readPortfolioEntry(selected.path))
     .then(bytes=>new TextDecoder().decode(bytes));
   window.__portfolioEntryDocument.catch(()=>{});
+  if(selected.pandaFrame){
+    const frame=selected.pandaFrame;
+    window.__portfolioPandaSource=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
+      .then(({bytes})=>new TextDecoder().decode(bytes));
+    window.__portfolioPandaSource.catch(()=>{});
+  }
   if(selected.coldAssets?.length&&!serviceWorker?.controller){
     window.__portfolioColdAssets=prepareColdAssets(selected.coldAssets,racePortfolioBytes);
   }
