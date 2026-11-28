@@ -304,7 +304,9 @@ const signalReady = canvas => {
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const waitForHero = () => new Promise(resolve => {
     const find = () => {
-      const root = document.querySelector('.scanning-hero')
+      const root = window.__portfolioScanFirst
+        ? document.querySelector('.hero')
+        : document.querySelector('.scanning-hero')
       if (root) resolve(root)
       else requestAnimationFrame(find)
     }
@@ -319,6 +321,14 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   canvas.className = 'panda-embedded-scan'
   canvas.setAttribute('aria-hidden', 'true')
   root.append(canvas)
+  if (window.__portfolioScanFirst) {
+    canvas.style.zIndex = '0';
+    const retain = new MutationObserver(() => {
+      if (root.isConnected && !canvas.isConnected) root.append(canvas);
+    });
+    retain.observe(root, {childList:true});
+    window.addEventListener('pagehide', () => retain.disconnect(), {once:true});
+  }
 
   try {
     if(window.frameElement?.matches('.panda-v3-live-frame')){
