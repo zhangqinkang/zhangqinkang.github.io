@@ -101,6 +101,30 @@ function coldModuleSource(asset) {
   return source.replace('import.meta.resolve?import.meta.resolve(e):new URL(e,import.meta.url).href',
     `new URL(e,${JSON.stringify(moduleURL)}).href`);
 }
+async function prepareSharedPandaScan(resource, transfer) {
+  if (typeof DecompressionStream !== 'function') return null;
+  const urls = new Map();
+  try {
+    const {bytes} = await transfer(resource.path, resource.mirror, resource.digest, 350, resource.pack);
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const modules = await new Response(stream).json();
+    const build = path => {
+      if (urls.has(path)) return urls.get(path);
+      const source = modules[path];
+      if (typeof source !== 'string') throw new Error('Missing scan module');
+      const url = new URL(path, location.origin);
+      const rewritten = source.replace(/(\b(?:from|import)\s*)(["'])(\.\/[^"']+)\2/g,
+        (match, prefix, quote, relative) => `${prefix}${quote}${build(new URL(relative, url).pathname)}${quote}`);
+      const objectUrl = URL.createObjectURL(new Blob([rewritten], {type:'text/javascript'}));
+      urls.set(path, objectUrl);
+      return objectUrl;
+    };
+    return build('/panda-original/scanning-hero.js');
+  } catch {
+    for (const url of urls.values()) URL.revokeObjectURL(url);
+    return null;
+  }
+}
 
 (() => {
   async function collectPortfolioBytes(response, beforeRead) {
@@ -261,7 +285,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   }
 }
 
-  const variants=[{"resources": ["/assets/index-C_YUaifs.js?v=pages-edge-4", "/assets/index-aRib4OP-.css"], "path": "/__entries/home-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/__entries/home-desktop.html", "digest": "2ecda30d12bfe150c644f18a1e1542be697213d9b89dbedaf9858d1a23b625ee", "pack": {"path": "/__startup-packs/2ecda30d12bfe150c644f18a/", "parts": 3}, "coldAssets": [{"kind": "module", "url": "/assets/index-C_YUaifs.js?v=pages-edge-4", "digest": "93fe3d0b2fba6016449e2f60070587ba6da2d62c005b570e68d8815f94c6c14e", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-C_YUaifs.js", "pack": {"path": "/__startup-packs/93fe3d0b2fba6016449e2f60/", "parts": 7}}, {"kind": "style", "url": "/assets/index-aRib4OP-.css", "digest": "f3d986b7253c37dae52eb98355f13d157852203c2270b9a362e2686cc175a750", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-aRib4OP-.css"}]}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css"], "path": "/__entries/home-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/__entries/home-mobile.html", "digest": "400c84320cb1daeba4d340959b616ea1ceac0e0fd1aeddadf307b349638622a4", "pack": {"path": "/__startup-packs/400c84320cb1daeba4d34095/", "parts": 3}, "coldAssets": [{"kind": "module", "url": "/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "digest": "52c9c03e2304045085aec21b533da844c70071caa4d60985be20861114acb236", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-B4cBenVn-pages-live.js", "pack": {"path": "/__startup-packs/52c9c03e2304045085aec21b/", "parts": 4}}, {"kind": "dependency", "url": "/assets/src-4DghefQ5.js", "digest": "9e8b0ccc4ee0aa714c7e2592d8c781460d0b935342f7b66c26984f80ffa6672d", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/src-4DghefQ5.js", "pack": {"path": "/__startup-packs/9e8b0ccc4ee0aa714c7e2592/", "parts": 3}}, {"kind": "dependency", "url": "/assets/pixel-city-renderer-CcLwTB12.js", "digest": "443bf7742495c620e90d83d61d2edeecbe7d7cd7be40d606fbd794d733f781aa", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/pixel-city-renderer-CcLwTB12.js"}, {"kind": "style", "url": "/assets/src-_UQREVRZ.css", "digest": "789255caa5c2c3bf0cd9a6af878fd9582d24ffcd9eea36266c91653250ca9f80", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/src-_UQREVRZ.css"}, {"kind": "style", "url": "/assets/index-CJiVI02r.css", "digest": "efdfe9b9341d32f14402c07857fdfd819493b4d971cbba28265727ba1c77aaff", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-CJiVI02r.css"}]}];
+  const variants=[{"resources": ["/assets/index-C_YUaifs.js?v=pages-edge-4", "/assets/index-aRib4OP-.css"], "path": "/__entries/home-desktop.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/__entries/home-desktop.html", "digest": "2ecda30d12bfe150c644f18a1e1542be697213d9b89dbedaf9858d1a23b625ee", "pack": {"path": "/__startup-packs/2ecda30d12bfe150c644f18a/", "parts": 3}, "coldAssets": [{"kind": "module", "url": "/assets/index-C_YUaifs.js?v=pages-edge-4", "digest": "93fe3d0b2fba6016449e2f60070587ba6da2d62c005b570e68d8815f94c6c14e", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-C_YUaifs.js", "pack": {"path": "/__startup-packs/93fe3d0b2fba6016449e2f60/", "parts": 7}}, {"kind": "style", "url": "/assets/index-aRib4OP-.css", "digest": "e8f37fffdfbc3c40574cee3009edb7107e53c051951e78502ebeb5c81c61a9ca", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-aRib4OP-.css"}]}, {"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css"], "path": "/__entries/home-mobile.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/__entries/home-mobile.html", "digest": "400c84320cb1daeba4d340959b616ea1ceac0e0fd1aeddadf307b349638622a4", "pack": {"path": "/__startup-packs/400c84320cb1daeba4d34095/", "parts": 3}, "coldAssets": [{"kind": "module", "url": "/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "digest": "52c9c03e2304045085aec21b533da844c70071caa4d60985be20861114acb236", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-B4cBenVn-pages-live.js", "pack": {"path": "/__startup-packs/52c9c03e2304045085aec21b/", "parts": 4}}, {"kind": "dependency", "url": "/assets/src-4DghefQ5.js", "digest": "9e8b0ccc4ee0aa714c7e2592d8c781460d0b935342f7b66c26984f80ffa6672d", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/src-4DghefQ5.js", "pack": {"path": "/__startup-packs/9e8b0ccc4ee0aa714c7e2592/", "parts": 3}}, {"kind": "dependency", "url": "/assets/pixel-city-renderer-CcLwTB12.js", "digest": "443bf7742495c620e90d83d61d2edeecbe7d7cd7be40d606fbd794d733f781aa", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/pixel-city-renderer-CcLwTB12.js"}, {"kind": "style", "url": "/assets/src-_UQREVRZ.css", "digest": "789255caa5c2c3bf0cd9a6af878fd9582d24ffcd9eea36266c91653250ca9f80", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/src-_UQREVRZ.css"}, {"kind": "style", "url": "/assets/index-CJiVI02r.css", "digest": "efdfe9b9341d32f14402c07857fdfd819493b4d971cbba28265727ba1c77aaff", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@905d96261dcbb4c7fc06b6a070e9552ae9ea66e4/assets/index-CJiVI02r.css"}]}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
   const serviceWorker=navigator.serviceWorker;
@@ -298,6 +322,10 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     window.__portfolioPandaSource=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
       .then(({bytes})=>new TextDecoder().decode(bytes));
     window.__portfolioPandaSource.catch(()=>{});
+  }
+  if(selected.pandaScan){
+    let pending;
+    window.__portfolioPandaScan=()=>pending??=prepareSharedPandaScan(selected.pandaScan,racePortfolioBytes);
   }
   if(selected.coldAssets?.length&&!serviceWorker?.controller){
     window.__portfolioColdAssets=prepareColdAssets(selected.coldAssets,racePortfolioBytes);

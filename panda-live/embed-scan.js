@@ -264,7 +264,7 @@ void revealSourcePage()
 // The V3 showcase can scroll the authored server-rendered document before
 // Vue starts. Reveal its existing sections as each enters the viewport.
 try {
-  if (window.frameElement?.matches('.panda-v3-live-frame') && top.__portfolioPandaHydrate) {
+if (window.frameElement?.matches('.panda-v3-live-frame') && (top.__portfolioPandaHydrate || window.__portfolioScanFirst)) {
     const reveal = new IntersectionObserver(entries => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
@@ -335,7 +335,15 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const { mountScanFrames } = await import('/panda-original/scan-frame-player.js')
       await mountScanFrames(canvas, root, 'result')
     } else {
-    const { mountScanningHero } = await import('/panda-original/scanning-hero.js?v=11')
+    const originalModule = '/panda-original/scanning-hero.js?v=11';
+    let sharedModule;
+    try {
+      if(window.frameElement?.matches('.panda-v3-live-frame'))sharedModule=await top.__portfolioPandaScan?.();
+    } catch {}
+    const { mountScanningHero } = sharedModule
+      ? await import(sharedModule).catch(()=>import(originalModule))
+      : await import(originalModule);
+    window.dispatchEvent(new Event('panda-scan-module-ready'));
     await mountScanningHero(
       canvas,
       root,

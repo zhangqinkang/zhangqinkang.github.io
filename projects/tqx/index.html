@@ -101,6 +101,30 @@ function coldModuleSource(asset) {
   return source.replace('import.meta.resolve?import.meta.resolve(e):new URL(e,import.meta.url).href',
     `new URL(e,${JSON.stringify(moduleURL)}).href`);
 }
+async function prepareSharedPandaScan(resource, transfer) {
+  if (typeof DecompressionStream !== 'function') return null;
+  const urls = new Map();
+  try {
+    const {bytes} = await transfer(resource.path, resource.mirror, resource.digest, 350, resource.pack);
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const modules = await new Response(stream).json();
+    const build = path => {
+      if (urls.has(path)) return urls.get(path);
+      const source = modules[path];
+      if (typeof source !== 'string') throw new Error('Missing scan module');
+      const url = new URL(path, location.origin);
+      const rewritten = source.replace(/(\b(?:from|import)\s*)(["'])(\.\/[^"']+)\2/g,
+        (match, prefix, quote, relative) => `${prefix}${quote}${build(new URL(relative, url).pathname)}${quote}`);
+      const objectUrl = URL.createObjectURL(new Blob([rewritten], {type:'text/javascript'}));
+      urls.set(path, objectUrl);
+      return objectUrl;
+    };
+    return build('/panda-original/scanning-hero.js');
+  } catch {
+    for (const url of urls.values()) URL.revokeObjectURL(url);
+    return null;
+  }
+}
 
 (() => {
   async function collectPortfolioBytes(response, beforeRead) {
@@ -298,6 +322,10 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     window.__portfolioPandaSource=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
       .then(({bytes})=>new TextDecoder().decode(bytes));
     window.__portfolioPandaSource.catch(()=>{});
+  }
+  if(selected.pandaScan){
+    let pending;
+    window.__portfolioPandaScan=()=>pending??=prepareSharedPandaScan(selected.pandaScan,racePortfolioBytes);
   }
   if(selected.coldAssets?.length&&!serviceWorker?.controller){
     window.__portfolioColdAssets=prepareColdAssets(selected.coldAssets,racePortfolioBytes);
