@@ -18,7 +18,7 @@ function prepareColdAssets(resources, transfer, signal) {
   }));
 }
 
-function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer, archiveDelay, needsSupplement) {
+function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer, archiveDelay, needsSupplement, verify, prioritizeArchive) {
   let ready = false;
   const archiveTransfer = new AbortController();
   const standard = Promise.all([entry, assets]).then(([html, assets]) => ({html, assets}));
@@ -30,10 +30,7 @@ function raceColdStartup(entry, assets, archive, resources, transfer, standardTr
     if (!needsSupplement()) archiveTransfer.abort();
     return delivery;
   });
-  const packaged = new Promise(resolve => setTimeout(resolve, archiveDelay)).then(async () => {
-    if (ready && !needsSupplement()) throw new Error('Project startup already available');
-    const request = new Request(archive.path, {priority:'high'});
-    const {bytes, source} = await transfer(request, archive.mirror, archive.digest, 300, undefined, archiveTransfer.signal);
+  const unpack = async (bytes, source) => {
     const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     const delivery = await new Response(stream).json();
     if (typeof delivery.html !== 'string') throw new Error('Missing original project document');
@@ -42,10 +39,33 @@ function raceColdStartup(entry, assets, archive, resources, transfer, standardTr
       if (typeof text !== 'string') throw new Error('Missing original project resource');
       return {...resource, text, source:`archive-${source}`};
     });
-    standardTransfer.abort();
     return {html:delivery.html, assets, pandaDocument:delivery.pandaDocument};
+  };
+  const packaged = new Promise(resolve => setTimeout(resolve, archiveDelay)).then(async () => {
+    if (ready && !needsSupplement()) throw new Error('Project startup already available');
+    const request = new Request(archive.path, {priority:'high'});
+    const {bytes, source} = await transfer(request, archive.mirror, archive.digest, prioritizeArchive?2400:300,
+      undefined, archiveTransfer.signal, prioritizeArchive);
+    const delivery = await unpack(bytes, source);
+    standardTransfer.abort();
+    return delivery;
   });
-  return {startup:Promise.any([verified, packaged]).catch(() => standard), packaged};
+  const choices = [verified, packaged];
+  if (window.__portfolioInitialArchive) {
+    const embedded = window.__portfolioInitialArchive.then(async encoded => {
+      if (ready) throw new Error('Project startup already available');
+      const bytes = typeof Uint8Array.fromBase64 === 'function'
+        ? Uint8Array.fromBase64(encoded)
+        : Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
+      await verify(bytes, archive.digest);
+      const delivery = await unpack(bytes, 'initial-response');
+      standardTransfer.abort();
+      archiveTransfer.abort();
+      return delivery;
+    });
+    choices.push(embedded);
+  }
+  return {startup:Promise.any(choices).catch(() => standard), packaged};
 }
 
 async function mountColdDocument(html, pending) {
@@ -243,7 +263,7 @@ async function readPortfolioPack(pack, signal, expected) {
   return verifyPortfolioBytes(await new Response(stream).arrayBuffer(), expected);
 }
 
-async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal) {
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal, waitForActiveOrigin = false) {
   const primary = new AbortController();
   const backup = new AbortController();
   const split = new AbortController();
@@ -255,7 +275,18 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   signal?.addEventListener('abort', cancel, {once:true});
   let launchBackup;
   const headStart = new Promise(resolve => { launchBackup = resolve; });
-  const hedge = setTimeout(launchBackup, hedgeDelay);
+  const started = performance.now();
+  let lastOriginProgress;
+  let hedge;
+  const startBackup = () => {
+    const now = performance.now();
+    if (waitForActiveOrigin && now - lastOriginProgress < 900 && now - started < 6800) {
+      hedge = setTimeout(startBackup, 650);
+      return;
+    }
+    launchBackup();
+  };
+  hedge = setTimeout(startBackup, hedgeDelay);
   const deadline = setTimeout(() => {
     primary.abort();
     backup.abort();
@@ -276,6 +307,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
       if (!response.ok) throw new Error('Portfolio resource unavailable');
       const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, () => {
         lastProgress = performance.now();
+        if (source === 'origin') lastOriginProgress = lastProgress;
         arm(4000);
       }), expected);
       return { bytes, source };
@@ -326,9 +358,15 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
   const serviceWorker=navigator.serviceWorker;
+  const hasArchive=selected.coldArchive&&typeof DecompressionStream==='function';
+  const prioritizeArchive=hasArchive&&selected.archiveFirst&&!serviceWorker?.controller;
+  const transfer=hasArchive?new AbortController():null;
+  const startIndividual=prioritizeArchive
+    ? new Promise(resolve=>setTimeout(resolve,5500))
+    : Promise.resolve();
   const startingHead=document.head;
   const workerReady=new Promise(resolve=>{
-    if(!serviceWorker||serviceWorker.controller){resolve();return;}
+    if(!serviceWorker||serviceWorker.controller||prioritizeArchive){resolve();return;}
     const finish=()=>{
       serviceWorker.removeEventListener('controllerchange',finish);
       resolve();
@@ -343,12 +381,13 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   window.__portfolioTransportReady=transportReady;
   const entryKey=new URL(selected.path,location.origin);
   entryKey.searchParams.set('entry-v',selected.digest.slice(0,16));
-  const cachedEntry=window.caches
-    ? caches.match(entryKey,{cacheName:"portfolio-original-entries-33207d69682072ab"}).catch(()=>null)
-    : Promise.resolve(null);
+  const cachedEntry=startIndividual.then(()=>{
+    transfer?.signal.throwIfAborted();
+    return window.caches?caches.match(entryKey,{cacheName:"portfolio-original-entries-33207d69682072ab"}).catch(()=>null):null;
+  });
   window.__portfolioEntryDocument=cachedEntry.then(cached=>cached
       ? cached.arrayBuffer().then(bytes=>({bytes,cached:true}))
-      : racePortfolioBytes(selected.path,selected.mirror,selected.digest,250,selected.pack))
+      : racePortfolioBytes(selected.path,selected.mirror,selected.digest,250,selected.pack,transfer?.signal))
     .then(({bytes,cached})=>{
       if(window.caches&&!cached){
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
@@ -356,7 +395,10 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
       }
       return bytes;
     })
-    .catch(()=>readPortfolioEntry(selected.path))
+    .catch(()=>{
+      transfer?.signal.throwIfAborted();
+      return readPortfolioEntry(selected.path);
+    })
     .then(bytes=>new TextDecoder().decode(bytes));
   window.__portfolioEntryDocument.catch(()=>{});
   let pandaFrameReady=false;
@@ -374,18 +416,14 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     window.__portfolioPandaScan=()=>pending??=prepareSharedPandaScan(selected.pandaScan,racePortfolioBytes);
     window.__portfolioEntryDocument.then(window.__portfolioPandaScan,()=>{});
   }
-  const hasArchive=selected.coldArchive&&typeof DecompressionStream==='function';
   if(selected.coldAssets?.length&&(!serviceWorker?.controller||hasArchive)){
-    const transfer=hasArchive?new AbortController():null;
-    const archiveFirst=hasArchive&&selected.archiveFirst&&!serviceWorker?.controller;
-    const direct=()=>prepareColdAssets(selected.coldAssets,racePortfolioBytes,transfer?.signal);
-    window.__portfolioColdAssets=archiveFirst
-      ? new Promise(resolve=>setTimeout(resolve,1000)).then(direct)
-      : direct();
+    window.__portfolioColdAssets=startIndividual.then(()=>
+      prepareColdAssets(selected.coldAssets,racePortfolioBytes,transfer?.signal));
     if(hasArchive){
       const {startup,packaged}=raceColdStartup(window.__portfolioEntryDocument,window.__portfolioColdAssets,
-        selected.coldArchive,selected.coldAssets,racePortfolioBytes,transfer,archiveFirst?0:500,
-        ()=>Boolean(selected.pandaFrame&&!pandaFrameReady));
+        selected.coldArchive,selected.coldAssets,racePortfolioBytes,transfer,
+        window.__portfolioInitialArchive?4200:prioritizeArchive?0:500,
+        ()=>Boolean(selected.pandaFrame&&!pandaFrameReady),verifyPortfolioBytes,prioritizeArchive);
       if(selected.pandaFrame){
         const packagedFrame=packaged.then(delivery=>{
           if(typeof delivery.pandaDocument!=='string')throw new Error('PandaAI document missing from archive');
@@ -401,6 +439,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     }
   }
   for(const url of selected.resources){
+    if(prioritizeArchive)break;
     if(window.__portfolioColdAssets&&selected.coldAssets.some(asset=>asset.url===url))continue;
     const module=new URL(url,location.href).pathname.endsWith('.js');
     const element=document.createElement('link');

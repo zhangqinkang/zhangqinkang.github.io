@@ -83,7 +83,7 @@ async function readPortfolioPack(pack, signal, expected) {
   return verifyPortfolioBytes(await new Response(stream).arrayBuffer(), expected);
 }
 
-async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal) {
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal, waitForActiveOrigin = false) {
   const primary = new AbortController();
   const backup = new AbortController();
   const split = new AbortController();
@@ -95,7 +95,18 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   signal?.addEventListener('abort', cancel, {once:true});
   let launchBackup;
   const headStart = new Promise(resolve => { launchBackup = resolve; });
-  const hedge = setTimeout(launchBackup, hedgeDelay);
+  const started = performance.now();
+  let lastOriginProgress;
+  let hedge;
+  const startBackup = () => {
+    const now = performance.now();
+    if (waitForActiveOrigin && now - lastOriginProgress < 900 && now - started < 6800) {
+      hedge = setTimeout(startBackup, 650);
+      return;
+    }
+    launchBackup();
+  };
+  hedge = setTimeout(startBackup, hedgeDelay);
   const deadline = setTimeout(() => {
     primary.abort();
     backup.abort();
@@ -116,6 +127,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
       if (!response.ok) throw new Error('Portfolio resource unavailable');
       const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, () => {
         lastProgress = performance.now();
+        if (source === 'origin') lastOriginProgress = lastProgress;
         arm(4000);
       }), expected);
       return { bytes, source };
