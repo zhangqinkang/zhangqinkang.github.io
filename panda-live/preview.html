@@ -83,10 +83,16 @@ async function readPortfolioPack(pack, signal, expected) {
   return verifyPortfolioBytes(await new Response(stream).arrayBuffer(), expected);
 }
 
-async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack) {
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal) {
   const primary = new AbortController();
   const backup = new AbortController();
   const split = new AbortController();
+  const cancel = () => {
+    primary.abort();
+    backup.abort();
+    split.abort();
+  };
+  signal?.addEventListener('abort', cancel, {once:true});
   let launchBackup;
   const headStart = new Promise(resolve => { launchBackup = resolve; });
   const hedge = setTimeout(launchBackup, hedgeDelay);
@@ -119,6 +125,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   }
 
   try {
+    signal?.throwIfAborted();
     const original = verify(input, {}, primary, 'origin').catch(error => {
       launchBackup();
       throw error;
@@ -150,9 +157,8 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     clearTimeout(hedge);
     clearTimeout(deadline);
     clearTimeout(splitTimer);
-    primary.abort();
-    backup.abort();
-    split.abort();
+    signal?.removeEventListener('abort', cancel);
+    cancel();
   }
 }
 (async () => {
