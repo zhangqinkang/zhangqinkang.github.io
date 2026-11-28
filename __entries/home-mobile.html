@@ -50,7 +50,7 @@
         visible.unobserve(target);
         warmProject(target);
       }
-    }, { threshold: .2 });
+    }, { threshold: .2, rootMargin: '1000px 120px' });
     const attach = () => {
       const cards = document.querySelectorAll('.jack-showcase-card');
       if (!cards.length) return false;
@@ -61,6 +61,13 @@
     const rendered = new MutationObserver(() => { if (attach()) rendered.disconnect(); });
     rendered.observe(document.getElementById('root'), { childList: true });
   }, { once: true });
+
+  const warmFromInput = event => {
+    const card = event.target.closest?.('.jack-showcase-card');
+    if (card) warmProject(card);
+  };
+  document.addEventListener('focusin', warmFromInput);
+  document.addEventListener('pointerover', warmFromInput, {passive:true});
 
   if (fromHistory && Number.isFinite(history.state?.[positionKey])) {
     try {

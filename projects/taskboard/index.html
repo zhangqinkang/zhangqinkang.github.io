@@ -304,13 +304,18 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     workerReady.then(()=>{clearTimeout(timer);resolve();});
   });
   window.__portfolioTransportReady=transportReady;
-  window.__portfolioEntryDocument=racePortfolioBytes(selected.path,selected.mirror,selected.digest,250,selected.pack)
-    .then(({bytes})=>{
-      if(window.caches){
-        const key=new URL(selected.path,location.origin);
-        key.searchParams.set('entry-v',selected.digest.slice(0,16));
+  const entryKey=new URL(selected.path,location.origin);
+  entryKey.searchParams.set('entry-v',selected.digest.slice(0,16));
+  const cachedEntry=window.caches
+    ? caches.match(entryKey,{cacheName:"portfolio-original-entries-33207d69682072ab"}).catch(()=>null)
+    : Promise.resolve(null);
+  window.__portfolioEntryDocument=cachedEntry.then(cached=>cached
+      ? cached.arrayBuffer().then(bytes=>({bytes,cached:true}))
+      : racePortfolioBytes(selected.path,selected.mirror,selected.digest,250,selected.pack))
+    .then(({bytes,cached})=>{
+      if(window.caches&&!cached){
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
-        caches.open("portfolio-original-entries-710a3351278e60de").then(cache=>cache.put(key,original)).catch(()=>{});
+        caches.open("portfolio-original-entries-33207d69682072ab").then(cache=>cache.put(entryKey,original)).catch(()=>{});
       }
       return bytes;
     })
