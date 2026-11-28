@@ -254,6 +254,7 @@ const revealSourcePage = async () => {
   if (!heroImage.complete) {
     try { await heroImage.decode() } catch {}
   }
+  document.documentElement.dataset.pandaPreviewReady = mode
   const post = () => window.parent.postMessage({ type: 'panda-live-ready', mode }, location.origin)
   if (phoneProof) post()
   else requestAnimationFrame(post)
@@ -310,7 +311,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     find()
   })
 
-  const root = await waitForHero()
+  let root = await waitForHero()
   const originalCanvas = root.querySelector('.scanning-canvas')
   if (originalCanvas) originalCanvas.style.display = 'none'
 
@@ -322,6 +323,12 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   try {
     if(window.frameElement?.matches('.panda-v3-live-frame')){
       await top.__portfolioPandaHydrate?.(window.frameElement);
+      if(!root.isConnected){
+        root=await waitForHero();
+        const native=root.querySelector('.scanning-canvas');
+        if(native)native.style.display='none';
+        root.append(canvas);
+      }
     }
     if(root.isConnected){
     if (phoneProof && proof === 'hero') {

@@ -19,7 +19,12 @@
       // Mount the selected original document at the existing address.
       const entry = window.__portfolioEntryDocument;
       delete window.__portfolioEntryDocument;
-      const [html] = await Promise.all([entry, window.__portfolioTransportReady]);
+      const html = await entry;
+      if (window.__portfolioColdAssets && await mountColdDocument(html, window.__portfolioColdAssets)) {
+        delete window.__portfolioColdAssets;
+        return;
+      }
+      await window.__portfolioTransportReady;
       mount(html);
       return;
     }

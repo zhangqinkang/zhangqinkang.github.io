@@ -61,12 +61,13 @@
   });
   const agent=navigator.userAgent;
   const webKit=agent.includes('AppleWebKit/')&&!/Chrome\/|Chromium\/|Edg\/|OPR\//.test(agent);
+  window.__portfolioPandaWebKit=webKit;
   // WebKit batches the delayed iframe work into the first scroll. Keep its
   // original startup timing while retaining the frame-by-frame mount queue.
   if(webKit)return;
   const readiness=new WeakMap();
   const waitForFrame=frame=>new Promise(resolve=>{
-    let visible=false,timer,lastInput=performance.now();
+    let visibleSince,timer,lastInput=performance.now();
     const inner=frame.contentWindow;
     const parent=frame.parentElement;
     const stop=()=>{
@@ -82,14 +83,15 @@
     const scheduleHydration=()=>{
       clearTimeout(timer);
       if(!frame.isConnected){stop();return}
-      if(visible)timer=setTimeout(stop,Math.max(0,lastInput+550-performance.now()));
+      const bounds=frame.getBoundingClientRect();
+      if(bounds.bottom<=0||bounds.top>=innerHeight){visibleSince=undefined;return}
+      const now=performance.now();
+      if(visibleSince===undefined)visibleSince=lastInput=now;
+      const due=Math.min(lastInput+550,visibleSince+1200);
+      timer=setTimeout(stop,Math.max(0,due-now));
     };
     const input=()=>{lastInput=performance.now();scheduleHydration()};
-    const watch=new IntersectionObserver(([entry])=>{
-      visible=entry.isIntersecting;
-      if(visible)lastInput=performance.now();
-      scheduleHydration();
-    });
+    const watch=new IntersectionObserver(scheduleHydration);
     const lifecycle=new MutationObserver(scheduleHydration);
     if(parent)lifecycle.observe(parent,{childList:true});
     watch.observe(frame);

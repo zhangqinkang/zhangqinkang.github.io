@@ -6,6 +6,102 @@
 <title>张勤康 · 作品集</title>
 <style>html{background:#0a0a0a;color:#fff}body{margin:0}a{color:inherit}</style>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script>
+function prepareColdAssets(resources, transfer) {
+  return Promise.all(resources.map(async resource => {
+    try {
+      const {bytes, source} = await transfer(resource.url, resource.mirror, resource.digest, 350, resource.pack);
+      return {...resource, text:new TextDecoder().decode(bytes), source};
+    } catch {
+      return resource;
+    }
+  }));
+}
+
+async function mountColdDocument(html, pending) {
+  if (!pending) return false;
+  const assets = await pending;
+  if (!assets.some(asset => asset.text !== undefined)) return false;
+  const tags = new Map();
+  const annotated = html.replace(/<(script|link)\b[^>]*>/gi, tag => {
+    const url = tag.match(/\b(?:src|href)="([^"]+)"/)?.[1];
+    const asset = assets.find(entry => entry.url === url);
+    if (!asset) return tag;
+    if (asset.kind === 'dependency' && asset.text !== undefined &&
+        /\brel="modulepreload"/.test(tag) && HTMLScriptElement.supports?.('importmap')) return '';
+    if (asset.kind === 'dependency' || (asset.kind === 'module'
+      ? !/\btype="module"/.test(tag) : !/\brel="stylesheet"/.test(tag))) return tag;
+    tags.set(asset.url, asset);
+    return asset.kind === 'module'
+      ? `<script type="application/x-portfolio-module" data-portfolio-cold="${asset.url}">`
+      : `<style data-portfolio-cold="${asset.url}"></style>`;
+  });
+  if (assets.some(asset => asset.kind !== 'dependency' && !tags.has(asset.url))) return false;
+
+  document.open();
+  document.write(annotated);
+  document.close();
+
+  if (HTMLScriptElement.supports?.('importmap')) {
+    const imports = {};
+    for (const asset of assets) {
+      if (asset.kind !== 'dependency' || asset.text === undefined) continue;
+      imports[new URL(asset.url, location.href).href] = URL.createObjectURL(new Blob(
+        [coldModuleSource(asset)], {type:'text/javascript'}
+      ));
+    }
+    if (Object.keys(imports).length) {
+      const map = document.createElement('script');
+      map.type = 'importmap';
+      map.textContent = JSON.stringify({imports});
+      document.head.appendChild(map);
+    }
+  }
+
+  const styles = [];
+  const modules = [];
+  for (const marker of document.querySelectorAll('[data-portfolio-cold]')) {
+    const asset = tags.get(marker.dataset.portfolioCold);
+    if (asset.kind === 'module') {
+      modules.push([marker,asset]);
+    } else if (asset.text !== undefined) {
+      marker.textContent = asset.text;
+    } else {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.crossOrigin = 'anonymous';
+      styles.push(new Promise(resolve => {
+        link.onload = link.onerror = resolve;
+      }));
+      link.href = asset.url;
+      marker.replaceWith(link);
+    }
+  }
+  await Promise.all(styles);
+  for (const [marker,asset] of modules) {
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.async = false;
+    if (asset.text === undefined) {
+      script.crossOrigin = 'anonymous';
+      script.src = asset.url;
+    } else {
+      script.textContent = coldModuleSource(asset);
+      script.dataset.portfolioAssetSource = asset.source;
+    }
+    marker.replaceWith(script);
+  }
+  return true;
+}
+
+function coldModuleSource(asset) {
+  const moduleURL = new URL(asset.url, location.href).href;
+  const source = asset.text.replace(/(\b(?:from|import)\s*)(["'])(\.[^"']+)\2/g,
+    (match, prefix, quote, path) => `${prefix}${quote}${new URL(path, moduleURL).href}${quote}`);
+  // Vite's dependency preloader resolves against the original module URL.
+  return source.replace('import.meta.resolve?import.meta.resolve(e):new URL(e,import.meta.url).href',
+    `new URL(e,${JSON.stringify(moduleURL)}).href`);
+}
+
 (() => {
   async function collectPortfolioBytes(response, beforeRead) {
   const reader = response.body.getReader();
@@ -165,7 +261,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   }
 }
 
-  const variants=[{"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css"], "path": "/__entries/tqx.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@eb5f851012c7dd2c8971faed5bd12c381954d387/__entries/tqx.html", "digest": "efd3df7cdee3442282e8f8258d9e12567d9abdaf3da62ec138b5c0a75a8f64a5", "pack": {"path": "/__startup-packs/efd3df7cdee3442282e8f825/", "parts": 7}}];
+  const variants=[{"resources": ["/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "/assets/pixel-city-renderer-CcLwTB12.js", "/assets/src-4DghefQ5.js", "/assets/src-_UQREVRZ.css", "/assets/index-CJiVI02r.css"], "path": "/__entries/tqx.html", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@eb5f851012c7dd2c8971faed5bd12c381954d387/__entries/tqx.html", "digest": "3319e88408f9ff7cd213e173fabc775a1e2b03d02a92f07da4fed827388962c1", "pack": {"path": "/__startup-packs/3319e88408f9ff7cd213e173/", "parts": 7}, "coldAssets": [{"kind": "module", "url": "/assets/index-B4cBenVn-pages-live.js?v=pages-native-4", "digest": "52c9c03e2304045085aec21b533da844c70071caa4d60985be20861114acb236", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@eb5f851012c7dd2c8971faed5bd12c381954d387/assets/index-B4cBenVn-pages-live.js", "pack": {"path": "/__startup-packs/52c9c03e2304045085aec21b/", "parts": 4}}, {"kind": "dependency", "url": "/assets/src-4DghefQ5.js", "digest": "9e8b0ccc4ee0aa714c7e2592d8c781460d0b935342f7b66c26984f80ffa6672d", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@eb5f851012c7dd2c8971faed5bd12c381954d387/assets/src-4DghefQ5.js", "pack": {"path": "/__startup-packs/9e8b0ccc4ee0aa714c7e2592/", "parts": 3}}, {"kind": "dependency", "url": "/assets/pixel-city-renderer-CcLwTB12.js", "digest": "443bf7742495c620e90d83d61d2edeecbe7d7cd7be40d606fbd794d733f781aa", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@eb5f851012c7dd2c8971faed5bd12c381954d387/assets/pixel-city-renderer-CcLwTB12.js"}, {"kind": "style", "url": "/assets/src-_UQREVRZ.css", "digest": "789255caa5c2c3bf0cd9a6af878fd9582d24ffcd9eea36266c91653250ca9f80", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@eb5f851012c7dd2c8971faed5bd12c381954d387/assets/src-_UQREVRZ.css"}, {"kind": "style", "url": "/assets/index-CJiVI02r.css", "digest": "efdfe9b9341d32f14402c07857fdfd819493b4d971cbba28265727ba1c77aaff", "mirror": "https://cdn.jsdelivr.net/gh/zhangqinkang/zhangqinkang.github.io@eb5f851012c7dd2c8971faed5bd12c381954d387/assets/index-CJiVI02r.css"}]}];
   const mobile=/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
   const selected=variants[mobile&&variants.length===2?1:0];
   const serviceWorker=navigator.serviceWorker;
@@ -190,14 +286,18 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
         const key=new URL(selected.path,location.origin);
         key.searchParams.set('entry-v',selected.digest.slice(0,16));
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
-        caches.open("portfolio-original-entries-66f093c08f8b5170").then(cache=>cache.put(key,original)).catch(()=>{});
+        caches.open("portfolio-original-entries-710a3351278e60de").then(cache=>cache.put(key,original)).catch(()=>{});
       }
       return bytes;
     })
     .catch(()=>readPortfolioEntry(selected.path))
     .then(bytes=>new TextDecoder().decode(bytes));
   window.__portfolioEntryDocument.catch(()=>{});
+  if(selected.coldAssets?.length&&!serviceWorker?.controller){
+    window.__portfolioColdAssets=prepareColdAssets(selected.coldAssets,racePortfolioBytes);
+  }
   for(const url of selected.resources){
+    if(window.__portfolioColdAssets&&selected.coldAssets.some(asset=>asset.url===url))continue;
     const module=new URL(url,location.href).pathname.endsWith('.js');
     const element=document.createElement('link');
     element.href=url;
@@ -226,7 +326,12 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
       // Mount the selected original document at the existing address.
       const entry = window.__portfolioEntryDocument;
       delete window.__portfolioEntryDocument;
-      const [html] = await Promise.all([entry, window.__portfolioTransportReady]);
+      const html = await entry;
+      if (window.__portfolioColdAssets && await mountColdDocument(html, window.__portfolioColdAssets)) {
+        delete window.__portfolioColdAssets;
+        return;
+      }
+      await window.__portfolioTransportReady;
       mount(html);
       return;
     }
