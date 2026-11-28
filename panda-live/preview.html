@@ -162,6 +162,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   }
 }
 (async () => {
+  window.__portfolioPandaBridgeStarted = true;
   const source = {"path": "/__entries/panda-mockup-index.html"};
   const canonicalURL = '/panda-live/' + location.search + location.hash;
   try {

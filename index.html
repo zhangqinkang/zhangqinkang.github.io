@@ -17,7 +17,7 @@ function prepareColdAssets(resources, transfer, signal) {
   }));
 }
 
-function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer) {
+function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer, archiveDelay) {
   let ready = false;
   const archiveTransfer = new AbortController();
   const standard = Promise.all([entry, assets]).then(([html, assets]) => ({html, assets}));
@@ -29,7 +29,7 @@ function raceColdStartup(entry, assets, archive, resources, transfer, standardTr
     archiveTransfer.abort();
     return delivery;
   });
-  const packaged = new Promise(resolve => setTimeout(resolve, 500)).then(async () => {
+  const packaged = new Promise(resolve => setTimeout(resolve, archiveDelay)).then(async () => {
     if (ready) throw new Error('Project startup already available');
     const request = new Request(archive.path, {priority:'high'});
     const {bytes, source} = await transfer(request, archive.mirror, archive.digest, 300, undefined, archiveTransfer.signal);
@@ -372,10 +372,14 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   const hasArchive=selected.coldArchive&&typeof DecompressionStream==='function';
   if(selected.coldAssets?.length&&(!serviceWorker?.controller||hasArchive)){
     const transfer=hasArchive?new AbortController():null;
-    window.__portfolioColdAssets=prepareColdAssets(selected.coldAssets,racePortfolioBytes,transfer?.signal);
+    const archiveFirst=hasArchive&&selected.archiveFirst&&!serviceWorker?.controller;
+    const direct=()=>prepareColdAssets(selected.coldAssets,racePortfolioBytes,transfer?.signal);
+    window.__portfolioColdAssets=archiveFirst
+      ? new Promise(resolve=>setTimeout(resolve,1000)).then(direct)
+      : direct();
     if(hasArchive){
       const startup=raceColdStartup(window.__portfolioEntryDocument,window.__portfolioColdAssets,
-        selected.coldArchive,selected.coldAssets,racePortfolioBytes,transfer);
+        selected.coldArchive,selected.coldAssets,racePortfolioBytes,transfer,archiveFirst?0:500);
       window.__portfolioEntryDocument=startup.then(delivery=>delivery.html);
       window.__portfolioColdAssets=startup.then(delivery=>delivery.assets);
       window.__portfolioEntryDocument.catch(()=>{});

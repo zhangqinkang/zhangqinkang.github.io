@@ -282,30 +282,43 @@ function mountSharedPandaFrame(frame, source, fallbackURL) {
   window.__portfolioPandaScan?.();
 
   let finished = false;
-  const fallback = () => {
-    if (finished || !frame.isConnected) return;
-    finished = true;
+  let requestedFallback = false;
+  let interruptedFallback = false;
+  const fallback = (retry = false) => {
+    if (finished || !frame.isConnected || (requestedFallback && !retry)) return;
+    requestedFallback = true;
     clearTimeout(deadline);
     frame.src = fallbackURL;
   };
-  const deadline = setTimeout(fallback, 2000);
+  const deadline = setTimeout(() => fallback(), 2000);
 
   source.then(async html => {
     await window.__portfolioPandaFrame?.();
     if (finished || !frame.isConnected) return;
+    const target = frame.contentWindow;
+    if (target.__portfolioPandaBridgeStarted) {
+      finished = true;
+      clearTimeout(deadline);
+      return;
+    }
     const canonicalURL = new URL('/panda-live/', location.href);
     canonicalURL.search = new URL(fallbackURL, location.href).search;
     const doc = frame.contentDocument;
+    if (!doc) return;
     try {
+      if (requestedFallback) {
+        interruptedFallback = true;
+        target.stop();
+      }
       doc.open();
-      frame.contentWindow.history.replaceState(null, '', canonicalURL);
+      target.history.replaceState(null, '', canonicalURL);
       doc.write(html);
       finished = true;
       clearTimeout(deadline);
     } finally {
       doc?.close();
     }
-  }).catch(fallback);
+  }).catch(() => fallback(interruptedFallback));
 
   return () => {
     finished = true;
