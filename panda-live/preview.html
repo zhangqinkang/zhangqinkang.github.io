@@ -3,7 +3,7 @@
   const chunks = [];
   let length = 0;
   while (true) {
-    beforeRead();
+    beforeRead(length);
     const next = await reader.read();
     if (next.done) break;
     chunks.push(next.value);
@@ -83,7 +83,7 @@ async function readPortfolioPack(pack, signal, expected) {
   return verifyPortfolioBytes(await new Response(stream).arrayBuffer(), expected);
 }
 
-async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal, waitForActiveOrigin = false) {
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal, archiveSize = 0) {
   const primary = new AbortController();
   const backup = new AbortController();
   const split = new AbortController();
@@ -97,10 +97,13 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   const headStart = new Promise(resolve => { launchBackup = resolve; });
   const started = performance.now();
   let lastOriginProgress;
+  let originBytes = 0;
   let hedge;
   const startBackup = () => {
     const now = performance.now();
-    if (waitForActiveOrigin && now - lastOriginProgress < 900 && now - started < 6800) {
+    const elapsed = now - started;
+    if (archiveSize && originBytes && now - lastOriginProgress < 900 && elapsed < 6800 &&
+        (elapsed < 3000 || originBytes / elapsed * 6800 >= archiveSize)) {
       hedge = setTimeout(startBackup, 650);
       return;
     }
@@ -125,9 +128,12 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
       arm(5500);
       const response = await fetch(url, { ...options, signal: controller.signal });
       if (!response.ok) throw new Error('Portfolio resource unavailable');
-      const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, () => {
+      const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, length => {
         lastProgress = performance.now();
-        if (source === 'origin') lastOriginProgress = lastProgress;
+        if (source === 'origin') {
+          lastOriginProgress = lastProgress;
+          originBytes = length;
+        }
         arm(4000);
       }), expected);
       return { bytes, source };

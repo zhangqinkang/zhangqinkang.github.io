@@ -18,7 +18,7 @@ function prepareColdAssets(resources, transfer, signal) {
   }));
 }
 
-function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer, archiveDelay, needsSupplement, verify, prioritizeArchive) {
+function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer, archiveDelay, needsSupplement, prioritizeArchive) {
   let ready = false;
   const archiveTransfer = new AbortController();
   const standard = Promise.all([entry, assets]).then(([html, assets]) => ({html, assets}));
@@ -43,29 +43,15 @@ function raceColdStartup(entry, assets, archive, resources, transfer, standardTr
   };
   const packaged = new Promise(resolve => setTimeout(resolve, archiveDelay)).then(async () => {
     if (ready && !needsSupplement()) throw new Error('Project startup already available');
-    const request = new Request(archive.path, {priority:'high'});
-    const {bytes, source} = await transfer(request, archive.mirror, archive.digest, prioritizeArchive?2400:300,
-      undefined, archiveTransfer.signal, prioritizeArchive);
-    const delivery = await unpack(bytes, source);
+    const preferred = prioritizeArchive && archive.preferred;
+    const request = new Request(preferred || archive.path, {priority:'high', credentials:'omit', referrerPolicy:'no-referrer'});
+    const {bytes, source} = await transfer(request, preferred?archive.path:archive.mirror, archive.digest,
+      preferred?1500:300, undefined, archiveTransfer.signal, preferred?archive.size:0);
+    const delivery = await unpack(bytes, preferred&&source==='origin'?'preferred':source);
     standardTransfer.abort();
     return delivery;
   });
-  const choices = [verified, packaged];
-  if (window.__portfolioInitialArchive) {
-    const embedded = window.__portfolioInitialArchive.then(async encoded => {
-      if (ready) throw new Error('Project startup already available');
-      const bytes = typeof Uint8Array.fromBase64 === 'function'
-        ? Uint8Array.fromBase64(encoded)
-        : Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
-      await verify(bytes, archive.digest);
-      const delivery = await unpack(bytes, 'initial-response');
-      standardTransfer.abort();
-      archiveTransfer.abort();
-      return delivery;
-    });
-    choices.push(embedded);
-  }
-  return {startup:Promise.any(choices).catch(() => standard), packaged};
+  return {startup:Promise.any([verified, packaged]).catch(() => standard), packaged};
 }
 
 async function mountColdDocument(html, pending) {
@@ -183,7 +169,7 @@ async function prepareSharedPandaScan(resource, transfer) {
   const chunks = [];
   let length = 0;
   while (true) {
-    beforeRead();
+    beforeRead(length);
     const next = await reader.read();
     if (next.done) break;
     chunks.push(next.value);
@@ -263,7 +249,7 @@ async function readPortfolioPack(pack, signal, expected) {
   return verifyPortfolioBytes(await new Response(stream).arrayBuffer(), expected);
 }
 
-async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal, waitForActiveOrigin = false) {
+async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pack, signal, archiveSize = 0) {
   const primary = new AbortController();
   const backup = new AbortController();
   const split = new AbortController();
@@ -277,10 +263,13 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   const headStart = new Promise(resolve => { launchBackup = resolve; });
   const started = performance.now();
   let lastOriginProgress;
+  let originBytes = 0;
   let hedge;
   const startBackup = () => {
     const now = performance.now();
-    if (waitForActiveOrigin && now - lastOriginProgress < 900 && now - started < 6800) {
+    const elapsed = now - started;
+    if (archiveSize && originBytes && now - lastOriginProgress < 900 && elapsed < 6800 &&
+        (elapsed < 3000 || originBytes / elapsed * 6800 >= archiveSize)) {
       hedge = setTimeout(startBackup, 650);
       return;
     }
@@ -305,9 +294,12 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
       arm(5500);
       const response = await fetch(url, { ...options, signal: controller.signal });
       if (!response.ok) throw new Error('Portfolio resource unavailable');
-      const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, () => {
+      const bytes = await verifyPortfolioBytes(await collectPortfolioBytes(response, length => {
         lastProgress = performance.now();
-        if (source === 'origin') lastOriginProgress = lastProgress;
+        if (source === 'origin') {
+          lastOriginProgress = lastProgress;
+          originBytes = length;
+        }
         arm(4000);
       }), expected);
       return { bytes, source };
@@ -422,8 +414,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     if(hasArchive){
       const {startup,packaged}=raceColdStartup(window.__portfolioEntryDocument,window.__portfolioColdAssets,
         selected.coldArchive,selected.coldAssets,racePortfolioBytes,transfer,
-        window.__portfolioInitialArchive?4200:prioritizeArchive?0:500,
-        ()=>Boolean(selected.pandaFrame&&!pandaFrameReady),verifyPortfolioBytes,prioritizeArchive);
+        prioritizeArchive?0:500,()=>Boolean(selected.pandaFrame&&!pandaFrameReady),prioritizeArchive);
       if(selected.pandaFrame){
         const packagedFrame=packaged.then(delivery=>{
           if(typeof delivery.pandaDocument!=='string')throw new Error('PandaAI document missing from archive');
