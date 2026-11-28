@@ -18,7 +18,7 @@ function prepareColdAssets(resources, transfer, signal) {
   }));
 }
 
-function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer, archiveDelay) {
+function raceColdStartup(entry, assets, archive, resources, transfer, standardTransfer, archiveDelay, needsSupplement) {
   let ready = false;
   const archiveTransfer = new AbortController();
   const standard = Promise.all([entry, assets]).then(([html, assets]) => ({html, assets}));
@@ -27,11 +27,11 @@ function raceColdStartup(entry, assets, archive, resources, transfer, standardTr
       throw new Error('Project startup needs the archive');
     }
     ready = true;
-    archiveTransfer.abort();
+    if (!needsSupplement()) archiveTransfer.abort();
     return delivery;
   });
   const packaged = new Promise(resolve => setTimeout(resolve, archiveDelay)).then(async () => {
-    if (ready) throw new Error('Project startup already available');
+    if (ready && !needsSupplement()) throw new Error('Project startup already available');
     const request = new Request(archive.path, {priority:'high'});
     const {bytes, source} = await transfer(request, archive.mirror, archive.digest, 300, undefined, archiveTransfer.signal);
     const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
@@ -43,9 +43,9 @@ function raceColdStartup(entry, assets, archive, resources, transfer, standardTr
       return {...resource, text, source:`archive-${source}`};
     });
     standardTransfer.abort();
-    return {html:delivery.html, assets};
+    return {html:delivery.html, assets, pandaDocument:delivery.pandaDocument};
   });
-  return Promise.any([verified, packaged]).catch(() => standard);
+  return {startup:Promise.any([verified, packaged]).catch(() => standard), packaged};
 }
 
 async function mountColdDocument(html, pending) {
@@ -344,7 +344,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   const entryKey=new URL(selected.path,location.origin);
   entryKey.searchParams.set('entry-v',selected.digest.slice(0,16));
   const cachedEntry=window.caches
-    ? caches.match(entryKey,{cacheName:"portfolio-original-entries-6f15bf3a49a7f2c1"}).catch(()=>null)
+    ? caches.match(entryKey,{cacheName:"portfolio-original-entries-33207d69682072ab"}).catch(()=>null)
     : Promise.resolve(null);
   window.__portfolioEntryDocument=cachedEntry.then(cached=>cached
       ? cached.arrayBuffer().then(bytes=>({bytes,cached:true}))
@@ -352,18 +352,22 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     .then(({bytes,cached})=>{
       if(window.caches&&!cached){
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
-        caches.open("portfolio-original-entries-6f15bf3a49a7f2c1").then(cache=>cache.put(entryKey,original)).catch(()=>{});
+        caches.open("portfolio-original-entries-33207d69682072ab").then(cache=>cache.put(entryKey,original)).catch(()=>{});
       }
       return bytes;
     })
     .catch(()=>readPortfolioEntry(selected.path))
     .then(bytes=>new TextDecoder().decode(bytes));
   window.__portfolioEntryDocument.catch(()=>{});
+  let pandaFrameReady=false;
   if(selected.pandaFrame){
     const frame=selected.pandaFrame;
-    let pending;
-    window.__loadPortfolioPandaSource=()=>pending??=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
-      .then(({bytes})=>new TextDecoder().decode(bytes));
+    window.__portfolioPandaSource=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
+      .then(({bytes})=>{
+        pandaFrameReady=true;
+        return new TextDecoder().decode(bytes);
+      });
+    window.__portfolioPandaSource.catch(()=>{});
   }
   if(selected.pandaScan){
     let pending;
@@ -379,8 +383,17 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
       ? new Promise(resolve=>setTimeout(resolve,1000)).then(direct)
       : direct();
     if(hasArchive){
-      const startup=raceColdStartup(window.__portfolioEntryDocument,window.__portfolioColdAssets,
-        selected.coldArchive,selected.coldAssets,racePortfolioBytes,transfer,archiveFirst?0:500);
+      const {startup,packaged}=raceColdStartup(window.__portfolioEntryDocument,window.__portfolioColdAssets,
+        selected.coldArchive,selected.coldAssets,racePortfolioBytes,transfer,archiveFirst?0:500,
+        ()=>Boolean(selected.pandaFrame&&!pandaFrameReady));
+      if(selected.pandaFrame){
+        const packagedFrame=packaged.then(delivery=>{
+          if(typeof delivery.pandaDocument!=='string')throw new Error('PandaAI document missing from archive');
+          return delivery.pandaDocument;
+        });
+        window.__portfolioPandaSource=Promise.any([window.__portfolioPandaSource,packagedFrame]);
+        window.__portfolioPandaSource.catch(()=>{});
+      }
       window.__portfolioEntryDocument=startup.then(delivery=>delivery.html);
       window.__portfolioColdAssets=startup.then(delivery=>delivery.assets);
       window.__portfolioEntryDocument.catch(()=>{});
