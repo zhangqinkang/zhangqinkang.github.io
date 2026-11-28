@@ -295,7 +295,8 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   window.__portfolioEntryDocument.catch(()=>{});
   if(selected.pandaFrame){
     const frame=selected.pandaFrame;
-    window.__portfolioPandaSource=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
+    window.__portfolioPandaSource=window.__portfolioEntryDocument
+      .then(()=>racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack))
       .then(({bytes})=>new TextDecoder().decode(bytes));
     window.__portfolioPandaSource.catch(()=>{});
   }
