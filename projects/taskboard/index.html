@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin><script>
 function prepareColdAssets(resources, transfer, signal) {
   return Promise.all(resources.map(async resource => {
+    if (resource.text !== undefined) return {...resource, source:'inline'};
     try {
       const {bytes, source} = await transfer(resource.url, resource.mirror, resource.digest, 350, resource.pack, signal);
       return {...resource, text:new TextDecoder().decode(bytes), source};
@@ -343,7 +344,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   const entryKey=new URL(selected.path,location.origin);
   entryKey.searchParams.set('entry-v',selected.digest.slice(0,16));
   const cachedEntry=window.caches
-    ? caches.match(entryKey,{cacheName:"portfolio-original-entries-33207d69682072ab"}).catch(()=>null)
+    ? caches.match(entryKey,{cacheName:"portfolio-original-entries-6f15bf3a49a7f2c1"}).catch(()=>null)
     : Promise.resolve(null);
   window.__portfolioEntryDocument=cachedEntry.then(cached=>cached
       ? cached.arrayBuffer().then(bytes=>({bytes,cached:true}))
@@ -351,7 +352,7 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
     .then(({bytes,cached})=>{
       if(window.caches&&!cached){
         const original=new Response(bytes,{headers:{'Content-Type':'text/html; charset=utf-8'}});
-        caches.open("portfolio-original-entries-33207d69682072ab").then(cache=>cache.put(entryKey,original)).catch(()=>{});
+        caches.open("portfolio-original-entries-6f15bf3a49a7f2c1").then(cache=>cache.put(entryKey,original)).catch(()=>{});
       }
       return bytes;
     })
@@ -360,9 +361,9 @@ async function racePortfolioBytes(input, mirror, expected, hedgeDelay = 650, pac
   window.__portfolioEntryDocument.catch(()=>{});
   if(selected.pandaFrame){
     const frame=selected.pandaFrame;
-    window.__portfolioPandaSource=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
+    let pending;
+    window.__loadPortfolioPandaSource=()=>pending??=racePortfolioBytes(frame.path,frame.mirror,frame.digest,350,frame.pack)
       .then(({bytes})=>new TextDecoder().decode(bytes));
-    window.__portfolioPandaSource.catch(()=>{});
   }
   if(selected.pandaScan){
     let pending;
