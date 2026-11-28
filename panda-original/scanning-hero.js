@@ -159,12 +159,18 @@ async function mountNativeScanningHero(canvas, root, colorUrl, depthUrl, options
 
   let phoneRasterSize = ''
   let renderSize = {width:1, height:1, pixelRatio:1}
+  const hostFrame = window.frameElement
+  const fittedFrame = hostFrame?.matches('.panda-v3-live-frame') ? hostFrame : null
+  const fittedView = fittedFrame?.ownerDocument.defaultView
   const resize = () => {
     const width = root.clientWidth
     const height = root.clientHeight
     if (!width || !height) return
     const displayedRatio = root.getBoundingClientRect().width / width || 1
-    const visiblePixels = Math.max(.5, displayedRatio * window.devicePixelRatio)
+    const fittedScale = fittedFrame?.offsetWidth
+      ? Math.min(1, fittedFrame.getBoundingClientRect().width / fittedFrame.offsetWidth)
+      : 1
+    const visiblePixels = Math.max(.5, displayedRatio * window.devicePixelRatio * fittedScale)
     const mobileLimit = mobileBrowser && options.fitCover ? 1.25 : 2
     let pixelRatio = Math.min(visiblePixels, mobileLimit, options.maxPixelRatio ?? 2)
     if (phoneProof) {
@@ -245,6 +251,7 @@ async function mountNativeScanningHero(canvas, root, colorUrl, depthUrl, options
   resize()
   const resizeObserver = new ResizeObserver(resize)
   resizeObserver.observe(root)
+  fittedView?.addEventListener('resize', resize)
   const proofCard = phoneProof ? window.frameElement.closest('.panda-live-single-screen') : null
   if (proofCard) resizeObserver.observe(proofCard)
 
@@ -413,6 +420,7 @@ async function mountNativeScanningHero(canvas, root, colorUrl, depthUrl, options
     window.removeEventListener('pagehide', onPageHide)
     intersectionObserver.disconnect()
     resizeObserver.disconnect()
+    fittedView?.removeEventListener('resize', resize)
     if (!options.lockPosition) {
       window.removeEventListener('pointermove', onPointerMove)
     }
